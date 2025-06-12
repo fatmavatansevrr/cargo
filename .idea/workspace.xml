@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MavenRunner">
+    <option name="skipTests" value="true" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2yPpa1MBFG6o3UVUhhyzO5n0PaA" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.cargo-tracking-system [clean].executor": "Run",
+    "Maven.cargo-tracking-system [install].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/vatan/Desktop/4.SINIF/4.sınıf dönem 2/microservices/cargo-tracking/user-management-service",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "settings.sync"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\user-management-service" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\tracking-service" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\shipment-service" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\notification-service" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\eureka-server" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\user-management-service\src\main\resources" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\tracking-service\src\main\resources" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\shipment-service\src\main\resources" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\notification-service\src\main\resources" />
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\eureka-server\src\main\resources" />
+    </key>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="" />
+      <created>1749746122576</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1749746122576</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="docker-compose.yml" />
+  </component>
+</project>

@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: file:///${user.home}/config-repo
+          searchPaths: .
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/

@@ -1,0 +1,106 @@
+version: '3.8'
+services:
+
+  # PostgreSQL
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  # MongoDB
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+
+  # Redis
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  # Kafka ve Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+  # Config Server
+  config-server:
+    build: ./config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - kafka
+      - postgres
+
+  # Eureka Server
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - config-server
+      - eureka-server
+
+  # Microservices
+  user-management-service:
+    build: ./user-management-service
+    depends_on:
+      - config-server
+      - eureka-server
+      - postgres
+
+  shipment-service:
+    build: ./shipment-service
+    depends_on:
+      - config-server
+      - eureka-server
+      - postgres
+
+  tracking-service:
+    build: ./tracking-service
+    depends_on:
+      - config-server
+      - eureka-server
+      - mongodb
+      - redis
+
+  notification-service:
+    build: ./notification-service
+    depends_on:
+      - config-server
+      - eureka-server
+      - kafka
+
+  analytics-service:
+    build: ./analytics-service
+    depends_on:
+      - config-server
+      - eureka-server
+      - postgres
+      - mongodb
