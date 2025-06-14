@@ -20,8 +20,8 @@
         <module name="analytics-service" />
         <module name="api-gateway" />
         <module name="shipment-service" />
-        <module name="user-management-service" />
         <module name="notification-service" />
+        <module name="user-management-service" />
         <module name="tracking-service" />
       </profile>
     </annotationProcessing>
