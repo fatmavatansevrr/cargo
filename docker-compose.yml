@@ -1,4 +1,10 @@
 version: '3.8'
+
+# Network tanımı - tüm servislerin birbirleri ile iletişim kurabilmesi için
+networks:
+  cargo-tracking-network:
+    driver: bridge
+
 services:
 
   # PostgreSQL
@@ -7,14 +13,33 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cargotracking
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cargotracking"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cargo-tracking-network
 
   # MongoDB
   mongodb:
     image: mongo:6
     ports:
       - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   # Redis
   redis:
@@ -66,41 +91,105 @@ services:
     depends_on:
       - config-server
       - eureka-server
+    networks:
+      - cargo-tracking-network
+    environment:
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - USER_MANAGEMENT_URL=http://user-management-service:8081
+      - SHIPMENT_SERVICE_URL=http://shipment-service:8082
+      - TRACKING_SERVICE_URL=http://tracking-service:8083
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8084
+      - ANALYTICS_SERVICE_URL=http://analytics-service:8085
 
   # Microservices
   user-management-service:
     build: ./user-management-service
     depends_on:
-      - config-server
-      - eureka-server
-      - postgres
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    networks:
+      - cargo-tracking-network
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_URL=http://eureka-server:8761/eureka/
 
   shipment-service:
     build: ./shipment-service
     depends_on:
-      - config-server
-      - eureka-server
-      - postgres
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    networks:
+      - cargo-tracking-network
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - EUREKA_URL=http://eureka-server:8761/eureka/
 
   tracking-service:
     build: ./tracking-service
     depends_on:
-      - config-server
-      - eureka-server
-      - mongodb
-      - redis
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - cargo-tracking-network
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017/cargotracking
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - EUREKA_URL=http://eureka-server:8761/eureka/
 
   notification-service:
     build: ./notification-service
     depends_on:
-      - config-server
-      - eureka-server
-      - kafka
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      kafka:
+        condition: service_started
+    networks:
+      - cargo-tracking-network
+    environment:
+      - KAFKA_SERVERS=kafka:9092
+      - EUREKA_URL=http://eureka-server:8761/eureka/
 
   analytics-service:
     build: ./analytics-service
     depends_on:
-      - config-server
-      - eureka-server
-      - postgres
-      - mongodb
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - cargo-tracking-network
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - MONGODB_URL=mongodb://mongodb:27017/cargotracking
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+
+# Named volumes
+volumes:
+  postgres_data:

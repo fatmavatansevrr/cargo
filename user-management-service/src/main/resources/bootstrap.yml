@@ -3,4 +3,4 @@ spring:
     name: user-management-service
   cloud:
     config:
-      uri: http://config-server:8888
+      enabled: false
