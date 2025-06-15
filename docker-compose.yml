@@ -12,7 +12,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: 1234
       POSTGRES_DB: cargotracking
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
     ports:
@@ -40,12 +40,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+    networks:
+      - cargo-tracking-network
 
   # Redis
   redis:
     image: redis:7
     ports:
       - "6379:6379"
+    networks:
+      - cargo-tracking-network
 
   # Kafka ve Zookeeper
   zookeeper:
@@ -54,6 +58,8 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
     ports:
       - "2181:2181"
+    networks:
+      - cargo-tracking-network
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -65,6 +71,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+    networks:
+      - cargo-tracking-network
 
   # Config Server
   config-server:
@@ -74,6 +82,8 @@ services:
     depends_on:
       - kafka
       - postgres
+    networks:
+      - cargo-tracking-network
 
   # Eureka Server
   eureka-server:
@@ -82,6 +92,8 @@ services:
       - "8761:8761"
     depends_on:
       - config-server
+    networks:
+      - cargo-tracking-network
 
   # API Gateway
   api-gateway:
@@ -113,10 +125,12 @@ services:
         condition: service_healthy
     networks:
       - cargo-tracking-network
+    ports:
+      - "8081:8081"
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
       - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=1234
       - EUREKA_URL=http://eureka-server:8761/eureka/
 
   shipment-service:
@@ -133,7 +147,7 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
       - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=1234
       - EUREKA_URL=http://eureka-server:8761/eureka/
 
   tracking-service:
@@ -186,7 +200,7 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
       - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=1234
       - MONGODB_URL=mongodb://mongodb:27017/cargotracking
       - EUREKA_URL=http://eureka-server:8761/eureka/
 

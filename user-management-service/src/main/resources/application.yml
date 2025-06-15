@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/cargo_tracking_db
     username: postgres
-    password: postgres
+    password: 1234
     driver-class-name: org.postgresql.Driver
   
   jpa:
