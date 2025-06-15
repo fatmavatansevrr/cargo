@@ -7,21 +7,21 @@ networks:
 
 services:
 
-  # PostgreSQL
+  # PostgreSQL - Ana veritabanı sunucusu
   postgres:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cargotracking
+      POSTGRES_DB: postgres
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./database-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d cargotracking"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -29,31 +29,42 @@ services:
     networks:
       - cargo-tracking-network
 
-  # MongoDB
+  # MongoDB - NoSQL veritabanı
   mongodb:
     image: mongo:6
     ports:
       - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 40s
+    networks:
+      - cargo-tracking-network
 
-  # Redis
+  # Redis - Cache ve Session Store
   redis:
     image: redis:7
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cargo-tracking-network
 
   # Kafka ve Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - cargo-tracking-network
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -61,10 +72,15 @@ services:
       - zookeeper
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     ports:
       - "9092:9092"
+    networks:
+      - cargo-tracking-network
 
   # Config Server
   config-server:
@@ -114,7 +130,7 @@ services:
     networks:
       - cargo-tracking-network
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
+      - DB_URL=jdbc:postgresql://postgres:5432/user_management_db
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - EUREKA_URL=http://eureka-server:8761/eureka/
@@ -128,13 +144,16 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - cargo-tracking-network
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
+      - DB_URL=jdbc:postgresql://postgres:5432/shipment_db
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
       - EUREKA_URL=http://eureka-server:8761/eureka/
+      - KAFKA_SERVERS=kafka:29092
 
   tracking-service:
     build: ./tracking-service
@@ -150,7 +169,7 @@ services:
     networks:
       - cargo-tracking-network
     environment:
-      - MONGODB_URL=mongodb://mongodb:27017/cargotracking
+      - MONGODB_URL=mongodb://mongodb:27017/tracking_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EUREKA_URL=http://eureka-server:8761/eureka/
@@ -184,12 +203,14 @@ services:
     networks:
       - cargo-tracking-network
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/cargotracking
+      - DB_URL=jdbc:postgresql://postgres:5432/analytics_db
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - MONGODB_URL=mongodb://mongodb:27017/cargotracking
+      - MONGODB_URL=mongodb://mongodb:27017/analytics_db
       - EUREKA_URL=http://eureka-server:8761/eureka/
 
 # Named volumes
 volumes:
   postgres_data:
+  mongodb_data:
+  redis_data:
