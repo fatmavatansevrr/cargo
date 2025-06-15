@@ -1,6 +1,25 @@
+server:
+  port: 8083
 spring:
   application:
     name: tracking-service
   cloud:
     config:
       enabled: false
+
+data:
+  mongodb:
+    uri: ${MONGODB_URL:mongodb://localhost:27017/tracking}
+
+kafka:
+  consumer:
+    bootstrap-servers: kafka:9092
+    group-id: tracking-group
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}

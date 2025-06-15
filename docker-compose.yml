@@ -164,7 +164,7 @@ services:
     networks:
       - cargo-tracking-network
     environment:
-      - MONGODB_URL=mongodb://mongodb:27017/cargotracking
+      - MONGODB_URL=mongodb://mongodb:27017/tracking
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EUREKA_URL=http://eureka-server:8761/eureka/
