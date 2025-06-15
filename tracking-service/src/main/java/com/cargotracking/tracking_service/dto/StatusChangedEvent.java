@@ -1,0 +1,19 @@
+package com.cargotracking.tracking_service.dto;
+
+import com.cargotracking.tracking_service.model.TrackingState;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class StatusChangedEvent {
+    private String shipmentId;
+    private TrackingState newStatus;
+    private String location;
+    private String updatedBy;
+    private LocalDateTime updatedAt;
+}

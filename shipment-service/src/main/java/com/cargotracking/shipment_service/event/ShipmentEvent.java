@@ -35,7 +35,7 @@ public class ShipmentEvent {
             shipmentId,
             trackingNumber,
             senderUserId,
-            Shipment.ShipmentStatus.CREATED,
+            Shipment.ShipmentStatus.ACTIVE,
             null,
             LocalDateTime.now(),
             "shipment-service",
@@ -46,8 +46,8 @@ public class ShipmentEvent {
     /**
      * Gönderi güncellendi olayı
      */
-    public static ShipmentEvent updated(Long shipmentId, String trackingNumber, Long senderUserId, 
-                                       Shipment.ShipmentStatus newStatus, Shipment.ShipmentStatus previousStatus, 
+    public static ShipmentEvent updated(Long shipmentId, String trackingNumber, Long senderUserId,
+                                       Shipment.ShipmentStatus newStatus, Shipment.ShipmentStatus previousStatus,
                                        Object shipmentData) {
         return new ShipmentEvent(
             "shipment.updated",
@@ -61,7 +61,24 @@ public class ShipmentEvent {
             shipmentData
         );
     }
-    
+
+    /**
+     * Gönderi iptal edildi olayı
+     */
+    public static ShipmentEvent finished(Long shipmentId, String trackingNumber, Long senderUserId, Object shipmentData) {
+        return new ShipmentEvent(
+                "shipment.finished",
+                shipmentId,
+                trackingNumber,
+                senderUserId,
+                Shipment.ShipmentStatus.FINISHED,
+                null,
+                LocalDateTime.now(),
+                "shipment-service",
+                shipmentData
+        );
+    }
+
     /**
      * Gönderi iptal edildi olayı
      */

@@ -4,9 +4,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="tracking_db fix">
+    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="eureka fix">
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/config/KafkaProducerConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/ShipmentEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/StatusChangedEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/StatusUpdateRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/TrackingHistoryResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/kafka/ShipmentEventListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingRecord.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingState.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/event/ShipmentEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/event/ShipmentEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Shipment.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Shipment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/event/ShipmentCreatedEventListener.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -208,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750001531243</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="eureka fix">
+      <option name="closed" value="true" />
+      <created>1750003674444</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1750003674444</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -220,7 +248,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="tracking service" />
     <MESSAGE value="tracking_db fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="tracking_db fix" />
+    <MESSAGE value="eureka fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="eureka fix" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

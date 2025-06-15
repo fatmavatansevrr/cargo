@@ -53,7 +53,7 @@ public class Shipment {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private ShipmentStatus status = ShipmentStatus.CREATED;
+    private ShipmentStatus status = ShipmentStatus.ACTIVE;
     
     @Column(name = "estimated_delivery_date")
     private LocalDateTime estimatedDeliveryDate;
@@ -133,14 +133,8 @@ public class Shipment {
      * Requirements: FR-SM-006, FR-SM-007 - Gönderi yaşam döngüsü
      */
     public enum ShipmentStatus {
-        CREATED("Oluşturuldu"),
-        PICKED_UP("Kargoya Verildi"),
-        IN_TRANSIT("Yolda"),
-        AT_SORTING_FACILITY("Transfer Merkezinde"),
-        OUT_FOR_DELIVERY("Dağıtımda"),
-        DELIVERED("Teslim Edildi"),
-        DELIVERY_FAILED("Teslim Edilemedi"),
-        RETURNED_TO_SENDER("Gönderene İade"),
+        ACTIVE("Aktif"),
+        FINISHED("Tamamlandı"),
         CANCELLED("İptal Edildi");
         
         private final String displayName;
@@ -158,13 +152,8 @@ public class Shipment {
          */
         public boolean canTransitionTo(ShipmentStatus newStatus) {
             return switch (this) {
-                case CREATED -> newStatus == PICKED_UP || newStatus == CANCELLED;
-                case PICKED_UP -> newStatus == IN_TRANSIT || newStatus == RETURNED_TO_SENDER;
-                case IN_TRANSIT -> newStatus == AT_SORTING_FACILITY || newStatus == OUT_FOR_DELIVERY;
-                case AT_SORTING_FACILITY -> newStatus == IN_TRANSIT || newStatus == OUT_FOR_DELIVERY;
-                case OUT_FOR_DELIVERY -> newStatus == DELIVERED || newStatus == DELIVERY_FAILED;
-                case DELIVERY_FAILED -> newStatus == OUT_FOR_DELIVERY || newStatus == RETURNED_TO_SENDER;
-                case DELIVERED, RETURNED_TO_SENDER, CANCELLED -> false; // Final durumlar
+                case ACTIVE -> newStatus == FINISHED || newStatus == CANCELLED;
+                case FINISHED, CANCELLED -> false; // Final durumlar
             };
         }
     }

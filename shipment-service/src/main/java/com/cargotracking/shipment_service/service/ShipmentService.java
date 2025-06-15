@@ -52,7 +52,7 @@ public class ShipmentService {
         shipment.setRecipientAddress(convertToAddressEntity(request.getRecipientAddress()));
         shipment.setPackageInfo(convertToPackageEntity(request.getPackageInfo()));
         shipment.setServiceType(request.getServiceType());
-        shipment.setStatus(Shipment.ShipmentStatus.CREATED);
+        shipment.setStatus(Shipment.ShipmentStatus.ACTIVE);
         shipment.setSpecialInstructions(request.getSpecialInstructions());
         shipment.setNotes(request.getNotes());
         
@@ -137,7 +137,7 @@ public class ShipmentService {
         shipment.setUpdatedBy(updatedBy);
         
         // Teslim edildi ise gerçek teslimat tarihini set et
-        if (newStatus == Shipment.ShipmentStatus.DELIVERED) {
+        if (newStatus == Shipment.ShipmentStatus.FINISHED) {
             shipment.setActualDeliveryDate(LocalDateTime.now());
         }
         
@@ -311,7 +311,7 @@ public class ShipmentService {
      * İptal edilebilir durumda mı kontrol
      */
     private boolean canBeCanceled(Shipment.ShipmentStatus status) {
-        return status == Shipment.ShipmentStatus.CREATED || status == Shipment.ShipmentStatus.PICKED_UP;
+        return status == Shipment.ShipmentStatus.ACTIVE;
     }
     
     /**
@@ -319,7 +319,7 @@ public class ShipmentService {
      * Requirements: FR-SM-004
      */
     private boolean canBeUpdated(Shipment.ShipmentStatus status) {
-        return status == Shipment.ShipmentStatus.CREATED || status == Shipment.ShipmentStatus.PICKED_UP;
+        return status == Shipment.ShipmentStatus.ACTIVE;
     }
     
     /**
