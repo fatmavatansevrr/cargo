@@ -4,43 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/event/ShipmentCreatedEventListener.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/controller/ShipmentController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/dto/AddressDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/dto/CreateShipmentRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/dto/ShipmentResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/dto/UpdateShipmentRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/event/ShipmentCreatedEvent.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/event/ShipmentStatusChangedEvent.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/exception/ErrorResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/exception/GlobalExceptionHandler.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/exception/ShipmentNotFoundException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/exception/TrackingNumberAlreadyExistsException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/mapper/ShipmentMapper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Address.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Priority.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Shipment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/ShipmentStatus.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/ShipmentType.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/repository/ShipmentRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/EventPublisherService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/EventPublisherServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/TrackingNumberGenerator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/TrackingNumberGeneratorImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/pom.xml" afterDir="false" />
+    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="tracking service">
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-management-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/user-management-service/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -226,6 +192,15 @@
       <updated>1749746122576</updated>
       <workItem from="1749752092254" duration="1237000" />
     </task>
+    <task id="LOCAL-00001" summary="tracking service">
+      <option name="closed" value="true" />
+      <created>1750000987190</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1750000987190</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -233,6 +208,10 @@
   </component>
   <component name="UnknownFeatures">
     <option featureType="com.intellij.fileTypeFactory" implementationName="docker-compose.yml" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="tracking service" />
+    <option name="LAST_COMMIT_MESSAGE" value="tracking service" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
