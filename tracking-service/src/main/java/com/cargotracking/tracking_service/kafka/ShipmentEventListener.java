@@ -20,7 +20,7 @@ public class ShipmentEventListener {
 
     @KafkaListener(topics = "shipment-events", groupId = "tracking-group")
     public void handleShipmentEvent(ShipmentEvent event) {
-        log.info("📦 Kafka olayı alındı: {} - Tracking: {} - Status: {}", 
+        log.info("📦 Kafka olayı alındı: {} - Tracking: {} - Status: {}",
                 event.getEventType(), event.getTrackingNumber(), event.getStatus());
 
         try {
@@ -50,7 +50,6 @@ public class ShipmentEventListener {
      */
     private TrackingState mapStatusToTrackingState(String status) {
         if (status == null) return TrackingState.CREATED;
-        
         return switch (status.toUpperCase()) {
             case "ACTIVE" -> TrackingState.IN_TRANSIT;
             case "FINISHED" -> TrackingState.DELIVERED;
