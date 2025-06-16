@@ -7,12 +7,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Set;
 
 /**
- * NotificationPreference Entity - MongoDB koleksiyonu
- * Kullanıcıların bildirim tercihlerini saklar
+ * Kullanıcı bildirim tercihleri modeli
+ * FR-NT-004: Kullanıcılar hangi durum değişikliklerinde bildirim alacaklarını yönetebilir
  */
 @Data
 @NoArgsConstructor
@@ -24,51 +23,58 @@ public class NotificationPreference {
     private String id;
     
     private Long userId;
-    private String email;
-    private String phoneNumber;
+    private String userEmail;
+    private String userPhone;
     
-    // Bildirim türleri için tercihler
-    private Map<Notification.NotificationType, Set<Notification.NotificationChannel>> preferences;
-    
-    // Genel tercihler
+    // Bildirim kanalları
     private boolean emailEnabled = true;
     private boolean smsEnabled = false;
-    private boolean pushEnabled = true;
-    private boolean inAppEnabled = true;
+    private boolean pushNotificationEnabled = false;
     
-    // Zaman tercihleri
-    private String timezone = "UTC";
-    private Integer quietHoursStart; // 22 (10 PM)
-    private Integer quietHoursEnd; // 8 (8 AM)
+    // Hangi durum değişikliklerinde bildirim alınacak
+    private Set<String> enabledStatusNotifications = Set.of(
+        "PACKAGE_RECEIVED",     // Kargoya Verildi
+        "IN_TRANSIT",          // Yolda
+        "OUT_FOR_DELIVERY",    // Dağıtıma Çıktı
+        "DELIVERED",           // Teslim Edildi
+        "DELIVERY_FAILED"      // Teslimat Başarısız
+    );
     
-    // Sıklık tercihleri
-    private boolean realTimeNotifications = true;
-    private boolean dailySummary = false;
-    private boolean weeklySummary = false;
+    // Hangi event tiplerinde bildirim alınacak
+    private Set<String> enabledEventTypes = Set.of(
+        "shipment.created",
+        "shipment.updated",
+        "status.updated"
+    );
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     /**
-     * Belirli bir bildirim türü için hangi kanalların aktif olduğunu kontrol eder
+     * Belirli bir status için bildirim aktif mi kontrol eder
      */
-    public boolean isChannelEnabledForType(Notification.NotificationType type, Notification.NotificationChannel channel) {
-        if (preferences == null || !preferences.containsKey(type)) {
-            return isChannelGenerallyEnabled(channel);
-        }
-        
-        return preferences.get(type).contains(channel) && isChannelGenerallyEnabled(channel);
+    public boolean isNotificationEnabledForStatus(String status) {
+        return enabledStatusNotifications.contains(status);
     }
     
     /**
-     * Genel kanal ayarlarını kontrol eder
+     * Belirli bir event tipi için bildirim aktif mi kontrol eder
      */
-    private boolean isChannelGenerallyEnabled(Notification.NotificationChannel channel) {
-        return switch (channel) {
-            case EMAIL -> emailEnabled;
-            case SMS -> smsEnabled;
-            case PUSH_NOTIFICATION -> pushEnabled;
-            case IN_APP -> inAppEnabled;
-        };
+    public boolean isNotificationEnabledForEventType(String eventType) {
+        return enabledEventTypes.contains(eventType);
+    }
+    
+    /**
+     * Email bildirim aktif mi ve email adresi var mı kontrol eder
+     */
+    public boolean canSendEmail() {
+        return emailEnabled && userEmail != null && !userEmail.trim().isEmpty();
+    }
+    
+    /**
+     * SMS bildirim aktif mi ve telefon numarası var mı kontrol eder
+     */
+    public boolean canSendSms() {
+        return smsEnabled && userPhone != null && !userPhone.trim().isEmpty();
     }
 } 

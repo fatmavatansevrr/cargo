@@ -7,16 +7,29 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * NotificationPreferenceRepository - MongoDB operations for notification preferences
+ * NotificationPreference repository interface
+ * MongoDB ile kullanıcı bildirim tercihlerini yönetir
  */
 @Repository
 public interface NotificationPreferenceRepository extends MongoRepository<NotificationPreference, String> {
     
+    /**
+     * Kullanıcı ID'sine göre bildirim tercihlerini bulur
+     */
     Optional<NotificationPreference> findByUserId(Long userId);
     
-    Optional<NotificationPreference> findByEmail(String email);
+    /**
+     * Email adresine göre bildirim tercihlerini bulur
+     */
+    Optional<NotificationPreference> findByUserEmail(String userEmail);
     
+    /**
+     * Kullanıcı ID'sine göre bildirim tercihlerinin var olup olmadığını kontrol eder
+     */
     boolean existsByUserId(Long userId);
     
+    /**
+     * Kullanıcı ID'sine göre bildirim tercihlerini siler
+     */
     void deleteByUserId(Long userId);
 } 

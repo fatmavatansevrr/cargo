@@ -1,223 +1,143 @@
 package com.cargotracking.notification_service.service;
 
-import com.cargotracking.notification_service.model.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * EmailService - Email bildirimleri gönderme servisi
+ * Email gönderme servisi
+ * FR-NT-003: Email bildirim desteği
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService {
     
-    private final JavaMailSender mailSender;
-    private final TemplateEngine templateEngine;
+    private final JavaMailSender javaMailSender;
     
-    @Value("${spring.mail.from}")
+    @Value("${spring.mail.from:noreply@cargotracking.com}")
     private String fromEmail;
     
-    @Value("${email.provider.enabled:true}")
+    @Value("${app.notification.email.enabled:true}")
     private boolean emailEnabled;
     
-    @Value("${email.retry.max-attempts:3}")
-    private int maxRetryAttempts;
-    
-    @Value("${email.retry.delay:5000}")
-    private long retryDelay;
-    
     /**
-     * Basit email gönderimi - retry logic ile
+     * Basit email gönderir
      */
-    public boolean sendEmail(Notification notification) {
-        if (!emailEnabled) {
-            log.warn("📧 Email service is disabled");
-            return false;
-        }
-        
-        // Recipient validation
-        if (notification.getRecipient() == null || notification.getRecipient().trim().isEmpty()) {
-            log.warn("📧 Cannot send email: recipient is null or empty");
-            return false;
-        }
-        
-        // Email format validation
-        if (!isValidEmail(notification.getRecipient())) {
-            log.warn("📧 Invalid email format: {}", notification.getRecipient());
-            return false;
-        }
-        
-        return sendEmailWithRetry(notification, maxRetryAttempts);
-    }
-    
-    /**
-     * Retry logic ile email gönderimi
-     */
-    private boolean sendEmailWithRetry(Notification notification, int attemptsLeft) {
+    @Async
+    public CompletableFuture<Boolean> sendEmail(String to, String subject, String content) {
         try {
+            if (!emailEnabled) {
+                log.warn("Email gönderimi devre dışı. Email: {}", to);
+                return CompletableFuture.completedFuture(false);
+            }
+            
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
-            message.setTo(notification.getRecipient());
-            message.setSubject(notification.getTitle());
-            message.setText(notification.getMessage());
-            message.setSentDate(new java.util.Date());
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(content);
             
-            mailSender.send(message);
-            log.info("📧 Email sent successfully to: {}", notification.getRecipient());
-            return true;
+            javaMailSender.send(message);
             
-        } catch (Exception e) {
-            log.error("📧 Failed to send email to: {} (attempts left: {})", 
-                     notification.getRecipient(), attemptsLeft - 1, e);
-            
-            if (attemptsLeft > 1) {
-                try {
-                    Thread.sleep(retryDelay);
-                    return sendEmailWithRetry(notification, attemptsLeft - 1);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    return false;
-                }
-            }
-            return false;
-        }
-    }
-    
-    /**
-     * HTML email gönderimi (template ile)
-     */
-    public boolean sendHtmlEmail(Notification notification, String templateName) {
-        // Recipient validation
-        if (notification.getRecipient() == null || notification.getRecipient().trim().isEmpty()) {
-            log.warn("Cannot send HTML email: recipient is null or empty");
-            return false;
-        }
-        
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            
-            helper.setFrom(fromEmail);
-            helper.setTo(notification.getRecipient());
-            helper.setSubject(notification.getTitle());
-            helper.setSentDate(new java.util.Date());
-            
-            // Thymeleaf template'i işle
-            Context context = new Context();
-            if (notification.getTemplateData() != null) {
-                for (Map.Entry<String, Object> entry : notification.getTemplateData().entrySet()) {
-                    context.setVariable(entry.getKey(), entry.getValue());
-                }
-            }
-            
-            // Genel değişkenler
-            context.setVariable("notificationTitle", notification.getTitle());
-            context.setVariable("notificationMessage", notification.getMessage());
-            context.setVariable("currentDate", LocalDateTime.now());
-            
-            String htmlContent = templateEngine.process(templateName, context);
-            helper.setText(htmlContent, true);
-            
-            mailSender.send(mimeMessage);
-            log.info("HTML email sent successfully to: {}", notification.getRecipient());
-            return true;
-            
-        } catch (MessagingException e) {
-            log.error("Failed to send HTML email to: {}", notification.getRecipient(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Toplu email gönderimi
-     */
-    public void sendBulkEmail(String[] recipients, String subject, String content) {
-        for (String recipient : recipients) {
-            try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom(fromEmail);
-                message.setTo(recipient);
-                message.setSubject(subject);
-                message.setText(content);
-                message.setSentDate(new java.util.Date());
-                
-                mailSender.send(message);
-                log.debug("Bulk email sent to: {}", recipient);
-                
-            } catch (Exception e) {
-                log.error("Failed to send bulk email to: {}", recipient, e);
-            }
-        }
-    }
-    
-    /**
-     * Email template test
-     */
-    public boolean testEmailConnection() {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(fromEmail);
-            message.setSubject("Test Email Connection");
-            message.setText("This is a test email to verify email configuration.");
-            message.setSentDate(new java.util.Date());
-            
-            mailSender.send(message);
-            log.info("Email connection test successful");
-            return true;
+            log.info("Email başarıyla gönderildi: {} -> {}", to, subject);
+            return CompletableFuture.completedFuture(true);
             
         } catch (Exception e) {
-            log.error("Email connection test failed", e);
-            return false;
+            log.error("Email gönderme hatası: {} -> {}, Hata: {}", to, subject, e.getMessage());
+            return CompletableFuture.completedFuture(false);
         }
     }
     
     /**
-     * Email format validation
+     * Shipment status değişikliği için email template'i oluşturur
      */
-    private boolean isValidEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-        
-        // Basit email regex validation
-        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
-        return email.matches(emailRegex);
-    }
-    
-    /**
-     * Bulk email gönderimi - geliştirilmiş
-     */
-    public int sendBulkEmailAdvanced(java.util.List<Notification> notifications) {
-        int successCount = 0;
-        for (Notification notification : notifications) {
-            if (sendEmail(notification)) {
-                successCount++;
-            }
+    public String createShipmentStatusEmailContent(String trackingNumber, String status, 
+                                                  String customerName, String location) {
+        return String.format("""
+            Sayın %s,
             
-            // Rate limiting için kısa bekleme
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-        
-        log.info("📧 Bulk email completed: {}/{} successful", successCount, notifications.size());
-        return successCount;
+            Takip numarası %s olan kargonuzun durumu güncellendi.
+            
+            Yeni Durum: %s
+            Lokasyon: %s
+            Güncelleme Zamanı: %s
+            
+            Kargonuzu takip etmek için: https://cargotracking.com/track/%s
+            
+            Bu bilgilendirme otomatik olarak gönderilmiştir.
+            
+            Saygılarımızla,
+            Kargo Takip Sistemi
+            """, 
+            customerName != null ? customerName : "Müşteri",
+            trackingNumber,
+            getStatusDisplayName(status),
+            location != null ? location : "Bilinmiyor",
+            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
+            trackingNumber
+        );
+    }
+    
+    /**
+     * Shipment oluşturulması için email template'i oluşturur
+     */
+    public String createShipmentCreatedEmailContent(String trackingNumber, String customerName, 
+                                                   String originAddress, String destinationAddress) {
+        return String.format("""
+            Sayın %s,
+            
+            Kargonuz başarıyla sisteme kaydedildi.
+            
+            Takip Numarası: %s
+            Çıkış Adresi: %s
+            Varış Adresi: %s
+            Oluşturma Zamanı: %s
+            
+            Kargonuzu takip etmek için: https://cargotracking.com/track/%s
+            
+            Bu bilgilendirme otomatik olarak gönderilmiştir.
+            
+            Saygılarımızla,
+            Kargo Takip Sistemi
+            """,
+            customerName != null ? customerName : "Müşteri",
+            trackingNumber,
+            originAddress != null ? originAddress : "Bilinmiyor",
+            destinationAddress != null ? destinationAddress : "Bilinmiyor",
+            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
+            trackingNumber
+        );
+    }
+    
+    /**
+     * Status code'unu kullanıcı dostu isim haline getirir
+     */
+    private String getStatusDisplayName(String status) {
+        return switch (status != null ? status : "") {
+            case "CREATED" -> "Oluşturuldu";
+            case "PACKAGE_RECEIVED" -> "Kargoya Verildi";
+            case "IN_TRANSIT" -> "Yolda";
+            case "OUT_FOR_DELIVERY" -> "Dağıtıma Çıktı";
+            case "DELIVERED" -> "Teslim Edildi";
+            case "DELIVERY_FAILED" -> "Teslimat Başarısız";
+            case "RETURNED_TO_SENDER" -> "Gönderene İade Edildi";
+            case "CANCELED" -> "İptal Edildi";
+            default -> status != null ? status : "Bilinmiyor";
+        };
+    }
+    
+    /**
+     * Email subject'i oluşturur
+     */
+    public String createEmailSubject(String trackingNumber, String status) {
+        return String.format("Kargo Durumu Güncellendi - %s (%s)", 
+                           trackingNumber, getStatusDisplayName(status));
     }
 } 

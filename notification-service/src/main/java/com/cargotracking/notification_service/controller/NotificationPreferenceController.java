@@ -1,337 +1,236 @@
 package com.cargotracking.notification_service.controller;
 
 import com.cargotracking.notification_service.model.NotificationPreference;
-import com.cargotracking.notification_service.repository.NotificationPreferenceRepository;
+import com.cargotracking.notification_service.service.NotificationPreferenceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
- * NotificationPreferenceController - Notification preferences REST API
- * Kullanıcı bildirim tercihlerini yönetmek için REST endpoints
+ * Notification preferences REST controller
+ * FR-NT-004: Kullanıcılar bildirim tercihlerini yönetebilir
  */
 @RestController
 @RequestMapping("/api/notification-preferences")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
+@Validated
+@Tag(name = "Notification Preferences", description = "Bildirim tercihleri yönetimi API'leri")
 public class NotificationPreferenceController {
     
-    private final NotificationPreferenceRepository preferenceRepository;
+    private final NotificationPreferenceService preferenceService;
     
     /**
-     * Kullanıcının bildirim tercihlerini getir
-     * GET /api/notification-preferences/user/{userId}
+     * Kullanıcının bildirim tercihlerini getirir
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<NotificationPreference> getUserPreferences(@PathVariable Long userId) {
-        
-        log.info("Getting notification preferences for user: {}", userId);
-        
+    @Operation(summary = "Kullanıcı bildirim tercihlerini getir", 
+               description = "Belirtilen kullanıcının bildirim tercihlerini getirir")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Bildirim tercihleri başarıyla getirildi",
+                    content = @Content(mediaType = "application/json", 
+                                     schema = @Schema(implementation = NotificationPreference.class))),
+        @ApiResponse(responseCode = "404", description = "Kullanıcı tercihleri bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> getUserPreferences(@PathVariable Long userId) {
         try {
-            Optional<NotificationPreference> preference = preferenceRepository.findByUserId(userId);
-            
-            if (preference.isPresent()) {
-                return ResponseEntity.ok(preference.get());
-            } else {
-                // Varsayılan tercihler oluştur
-                NotificationPreference defaultPreference = createDefaultPreferences(userId);
-                return ResponseEntity.ok(defaultPreference);
-            }
-            
+            log.info("Kullanıcı bildirim tercihleri istendi: {}", userId);
+            NotificationPreference preference = preferenceService.getUserPreferences(userId);
+            return ResponseEntity.ok(preference);
         } catch (Exception e) {
-            log.error("Error getting preferences for user: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Kullanıcı tercihleri getirme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
     
     /**
-     * Kullanıcının bildirim tercihlerini güncelle veya oluştur
-     * PUT /api/notification-preferences/user/{userId}
+     * Email ile kullanıcının bildirim tercihlerini getirir
+     */
+    @GetMapping("/email/{email}")
+    @Operation(summary = "Email ile bildirim tercihlerini getir", 
+               description = "Belirtilen email adresine sahip kullanıcının bildirim tercihlerini getirir")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Bildirim tercihleri başarıyla getirildi",
+                    content = @Content(mediaType = "application/json", 
+                                     schema = @Schema(implementation = NotificationPreference.class))),
+        @ApiResponse(responseCode = "404", description = "Email ile kullanıcı bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> getPreferencesByEmail(@PathVariable String email) {
+        try {
+            log.info("Email ile bildirim tercihleri istendi: {}", email);
+            NotificationPreference preference = preferenceService.getPreferencesByEmail(email);
+            return ResponseEntity.ok(preference);
+        } catch (Exception e) {
+            log.error("Email ile tercihleri getirme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Kullanıcı bildirim tercihlerini oluşturur
+     */
+    @PostMapping
+    @Operation(summary = "Bildirim tercihlerini oluştur", 
+               description = "Yeni kullanıcı bildirim tercihleri oluşturur")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Bildirim tercihleri başarıyla oluşturuldu",
+                    content = @Content(mediaType = "application/json", 
+                                     schema = @Schema(implementation = NotificationPreference.class))),
+        @ApiResponse(responseCode = "400", description = "Geçersiz veri"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> createPreferences(@Valid @RequestBody NotificationPreference preference) {
+        try {
+            log.info("Yeni bildirim tercihleri oluşturuluyor: userId={}, email={}", 
+                    preference.getUserId(), preference.getUserEmail());
+            
+            NotificationPreference createdPreference = preferenceService.createPreferences(preference);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdPreference);
+        } catch (Exception e) {
+            log.error("Bildirim tercihleri oluşturma hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Kullanıcı bildirim tercihlerini günceller
      */
     @PutMapping("/user/{userId}")
-    public ResponseEntity<NotificationPreference> updateUserPreferences(
-            @PathVariable Long userId,
-            @Valid @RequestBody NotificationPreference preferences) {
-        
-        log.info("Updating notification preferences for user: {}", userId);
-        
+    @Operation(summary = "Bildirim tercihlerini güncelle", 
+               description = "Mevcut kullanıcı bildirim tercihlerini günceller")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Bildirim tercihleri başarıyla güncellendi",
+                    content = @Content(mediaType = "application/json", 
+                                     schema = @Schema(implementation = NotificationPreference.class))),
+        @ApiResponse(responseCode = "400", description = "Geçersiz veri"),
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> updatePreferences(@PathVariable Long userId,
+                                             @Valid @RequestBody NotificationPreference preference) {
         try {
-            // Mevcut tercihleri kontrol et
-            Optional<NotificationPreference> existingPreference = preferenceRepository.findByUserId(userId);
-            
-            NotificationPreference toSave;
-            if (existingPreference.isPresent()) {
-                // Mevcut tercihleri güncelle
-                toSave = existingPreference.get();
-                toSave.setEmail(preferences.getEmail());
-                toSave.setPhoneNumber(preferences.getPhoneNumber());
-                toSave.setPreferences(preferences.getPreferences());
-                toSave.setEmailEnabled(preferences.isEmailEnabled());
-                toSave.setSmsEnabled(preferences.isSmsEnabled());
-                toSave.setPushEnabled(preferences.isPushEnabled());
-                toSave.setInAppEnabled(preferences.isInAppEnabled());
-                toSave.setTimezone(preferences.getTimezone());
-                toSave.setQuietHoursStart(preferences.getQuietHoursStart());
-                toSave.setQuietHoursEnd(preferences.getQuietHoursEnd());
-                toSave.setRealTimeNotifications(preferences.isRealTimeNotifications());
-                toSave.setDailySummary(preferences.isDailySummary());
-                toSave.setWeeklySummary(preferences.isWeeklySummary());
-                toSave.setUpdatedAt(LocalDateTime.now());
-            } else {
-                // Yeni tercihler oluştur
-                toSave = preferences;
-                toSave.setUserId(userId);
-                toSave.setCreatedAt(LocalDateTime.now());
-                toSave.setUpdatedAt(LocalDateTime.now());
-            }
-            
-            NotificationPreference saved = preferenceRepository.save(toSave);
-            
-            return ResponseEntity.ok(saved);
-            
+            log.info("Bildirim tercihleri güncelleniyor: userId={}", userId);
+            preference.setUserId(userId); // Ensure userId is set
+            NotificationPreference updatedPreference = preferenceService.updatePreferences(preference);
+            return ResponseEntity.ok(updatedPreference);
         } catch (Exception e) {
-            log.error("Error updating preferences for user: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Bildirim tercihleri güncelleme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
     
     /**
-     * Belirli bir bildirim türü için kanalları güncelle
-     * PUT /api/notification-preferences/user/{userId}/type/{notificationType}
+     * Email kanalını etkinleştirir/devre dışı bırakır
      */
-    @PutMapping("/user/{userId}/type/{notificationType}")
-    public ResponseEntity<Map<String, Object>> updateNotificationTypePreferences(
-            @PathVariable Long userId,
-            @PathVariable String notificationType,
-            @RequestBody Map<String, Boolean> channelPreferences) {
-        
-        log.info("Updating preferences for user: {}, type: {}", userId, notificationType);
-        
+    @PatchMapping("/user/{userId}/email")
+    @Operation(summary = "Email bildirimlerini aç/kapat", 
+               description = "Kullanıcının email bildirimlerini etkinleştirir veya devre dışı bırakır")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Email bildirimleri başarıyla güncellendi"),
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> toggleEmailNotifications(@PathVariable Long userId,
+                                                    @RequestParam boolean enabled) {
         try {
-            Optional<NotificationPreference> existingPreference = preferenceRepository.findByUserId(userId);
-            
-            NotificationPreference preference;
-            if (existingPreference.isPresent()) {
-                preference = existingPreference.get();
-            } else {
-                preference = createDefaultPreferences(userId);
-            }
-            
-            // Channel preferences güncelle
-            // TODO: Implementation for specific notification type preferences
-            
-            preference.setUpdatedAt(LocalDateTime.now());
-            NotificationPreference saved = preferenceRepository.save(preference);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", userId);
-            response.put("notificationType", notificationType);
-            response.put("updated", true);
-            response.put("preferences", saved);
-            
-            return ResponseEntity.ok(response);
-            
+            log.info("Email bildirimleri güncelleniyor: userId={}, enabled={}", userId, enabled);
+            NotificationPreference preference = preferenceService.toggleEmailNotifications(userId, enabled);
+            return ResponseEntity.ok(preference);
         } catch (Exception e) {
-            log.error("Error updating type preferences for user: {}, type: {}", userId, notificationType, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Email bildirim güncelleme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
     
     /**
-     * Email tercihini güncelle
-     * PUT /api/notification-preferences/user/{userId}/email
+     * SMS kanalını etkinleştirir/devre dışı bırakır
      */
-    @PutMapping("/user/{userId}/email")
-    public ResponseEntity<Map<String, Object>> updateEmailPreference(
-            @PathVariable Long userId,
-            @RequestBody Map<String, Object> emailData) {
-        
-        log.info("Updating email preference for user: {}", userId);
-        
+    @PatchMapping("/user/{userId}/sms")
+    @Operation(summary = "SMS bildirimlerini aç/kapat", 
+               description = "Kullanıcının SMS bildirimlerini etkinleştirir veya devre dışı bırakır")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "SMS bildirimleri başarıyla güncellendi"),
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> toggleSmsNotifications(@PathVariable Long userId,
+                                                  @RequestParam boolean enabled) {
         try {
-            Optional<NotificationPreference> existingPreference = preferenceRepository.findByUserId(userId);
-            
-            NotificationPreference preference;
-            if (existingPreference.isPresent()) {
-                preference = existingPreference.get();
-            } else {
-                preference = createDefaultPreferences(userId);
-            }
-            
-            // Email bilgilerini güncelle
-            if (emailData.containsKey("email")) {
-                preference.setEmail((String) emailData.get("email"));
-            }
-            if (emailData.containsKey("enabled")) {
-                preference.setEmailEnabled((Boolean) emailData.get("enabled"));
-            }
-            
-            preference.setUpdatedAt(LocalDateTime.now());
-            NotificationPreference saved = preferenceRepository.save(preference);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", userId);
-            response.put("email", saved.getEmail());
-            response.put("emailEnabled", saved.isEmailEnabled());
-            response.put("updated", true);
-            
-            return ResponseEntity.ok(response);
-            
+            log.info("SMS bildirimleri güncelleniyor: userId={}, enabled={}", userId, enabled);
+            NotificationPreference preference = preferenceService.toggleSmsNotifications(userId, enabled);
+            return ResponseEntity.ok(preference);
         } catch (Exception e) {
-            log.error("Error updating email preference for user: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("SMS bildirim güncelleme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
     
     /**
-     * SMS tercihini güncelle
-     * PUT /api/notification-preferences/user/{userId}/sms
+     * Belirli bir status için bildirimleri etkinleştirir/devre dışı bırakır
      */
-    @PutMapping("/user/{userId}/sms")
-    public ResponseEntity<Map<String, Object>> updateSmsPreference(
-            @PathVariable Long userId,
-            @RequestBody Map<String, Object> smsData) {
-        
-        log.info("Updating SMS preference for user: {}", userId);
-        
+    @PatchMapping("/user/{userId}/status/{status}")
+    @Operation(summary = "Durum bildirimleri aç/kapat", 
+               description = "Belirli bir durum için bildirimleri etkinleştirir veya devre dışı bırakır")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Durum bildirimleri başarıyla güncellendi"),
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> toggleStatusNotification(@PathVariable Long userId,
+                                                    @PathVariable String status,
+                                                    @RequestParam boolean enabled) {
         try {
-            Optional<NotificationPreference> existingPreference = preferenceRepository.findByUserId(userId);
-            
-            NotificationPreference preference;
-            if (existingPreference.isPresent()) {
-                preference = existingPreference.get();
-            } else {
-                preference = createDefaultPreferences(userId);
-            }
-            
-            // SMS bilgilerini güncelle
-            if (smsData.containsKey("phoneNumber")) {
-                preference.setPhoneNumber((String) smsData.get("phoneNumber"));
-            }
-            if (smsData.containsKey("enabled")) {
-                preference.setSmsEnabled((Boolean) smsData.get("enabled"));
-            }
-            
-            preference.setUpdatedAt(LocalDateTime.now());
-            NotificationPreference saved = preferenceRepository.save(preference);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", userId);
-            response.put("phoneNumber", saved.getPhoneNumber());
-            response.put("smsEnabled", saved.isSmsEnabled());
-            response.put("updated", true);
-            
-            return ResponseEntity.ok(response);
-            
+            log.info("Status bildirimi güncelleniyor: userId={}, status={}, enabled={}", 
+                    userId, status, enabled);
+            NotificationPreference preference = preferenceService.toggleStatusNotification(userId, status, enabled);
+            return ResponseEntity.ok(preference);
         } catch (Exception e) {
-            log.error("Error updating SMS preference for user: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Status bildirim güncelleme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
     
     /**
-     * Sessiz saatleri güncelle
-     * PUT /api/notification-preferences/user/{userId}/quiet-hours
-     */
-    @PutMapping("/user/{userId}/quiet-hours")
-    public ResponseEntity<Map<String, Object>> updateQuietHours(
-            @PathVariable Long userId,
-            @RequestBody Map<String, Integer> quietHours) {
-        
-        log.info("Updating quiet hours for user: {}", userId);
-        
-        try {
-            Optional<NotificationPreference> existingPreference = preferenceRepository.findByUserId(userId);
-            
-            NotificationPreference preference;
-            if (existingPreference.isPresent()) {
-                preference = existingPreference.get();
-            } else {
-                preference = createDefaultPreferences(userId);
-            }
-            
-            if (quietHours.containsKey("start")) {
-                preference.setQuietHoursStart(quietHours.get("start"));
-            }
-            if (quietHours.containsKey("end")) {
-                preference.setQuietHoursEnd(quietHours.get("end"));
-            }
-            
-            preference.setUpdatedAt(LocalDateTime.now());
-            NotificationPreference saved = preferenceRepository.save(preference);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", userId);
-            response.put("quietHoursStart", saved.getQuietHoursStart());
-            response.put("quietHoursEnd", saved.getQuietHoursEnd());
-            response.put("updated", true);
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("Error updating quiet hours for user: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    
-    /**
-     * Kullanıcı tercihlerini sil
-     * DELETE /api/notification-preferences/user/{userId}
+     * Kullanıcı bildirim tercihlerini siler
      */
     @DeleteMapping("/user/{userId}")
-    public ResponseEntity<Map<String, String>> deleteUserPreferences(@PathVariable Long userId) {
-        
-        log.info("Deleting notification preferences for user: {}", userId);
-        
+    @Operation(summary = "Bildirim tercihlerini sil", 
+               description = "Kullanıcının tüm bildirim tercihlerini siler")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Bildirim tercihleri başarıyla silindi"),
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı"),
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
+    public ResponseEntity<?> deletePreferences(@PathVariable Long userId) {
         try {
-            preferenceRepository.deleteByUserId(userId);
-            
-            Map<String, String> response = new HashMap<>();
-            response.put("userId", userId.toString());
-            response.put("status", "deleted");
-            response.put("message", "Kullanıcı bildirim tercihleri silindi");
-            
-            return ResponseEntity.ok(response);
-            
+            log.info("Bildirim tercihleri siliniyor: userId={}", userId);
+            preferenceService.deletePreferences(userId);
+            return ResponseEntity.ok(Map.of("message", "Bildirim tercihleri başarıyla silindi"));
         } catch (Exception e) {
-            log.error("Error deleting preferences for user: {}", userId, e);
-            
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Tercihler silinemedi");
-            errorResponse.put("userId", userId.toString());
-            
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            log.error("Bildirim tercihleri silme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
-    }
-    
-    /**
-     * Varsayılan tercihler oluştur
-     */
-    private NotificationPreference createDefaultPreferences(Long userId) {
-        NotificationPreference defaultPreference = new NotificationPreference();
-        defaultPreference.setUserId(userId);
-        defaultPreference.setEmailEnabled(true);
-        defaultPreference.setSmsEnabled(false);
-        defaultPreference.setPushEnabled(true);
-        defaultPreference.setInAppEnabled(true);
-        defaultPreference.setTimezone("Europe/Istanbul");
-        defaultPreference.setQuietHoursStart(22);
-        defaultPreference.setQuietHoursEnd(8);
-        defaultPreference.setRealTimeNotifications(true);
-        defaultPreference.setDailySummary(false);
-        defaultPreference.setWeeklySummary(false);
-        defaultPreference.setCreatedAt(LocalDateTime.now());
-        defaultPreference.setUpdatedAt(LocalDateTime.now());
-        
-        return preferenceRepository.save(defaultPreference);
     }
 } 
