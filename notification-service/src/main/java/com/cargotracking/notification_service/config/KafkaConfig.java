@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j
 public class KafkaConfig {
     
-    @Value("${spring.kafka.bootstrap-servers:localhost:9092}")
+    @Value("${spring.kafka.bootstrap-servers:kafka:29092}")
     private String bootstrapServers;
     
     @Value("${spring.kafka.consumer.group-id:notification-service}")
