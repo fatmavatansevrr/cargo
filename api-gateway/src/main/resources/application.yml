@@ -5,6 +5,10 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: user-management-auth
+          uri: lb://user-management-service
+          predicates:
+            - Path=/api/auth/**
         - id: user-management-service
           uri: lb://user-management-service
           predicates:

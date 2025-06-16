@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Network tanımı - tüm servislerin birbirleri ile iletişim kurabilmesi için
 networks:
   cargo-tracking-network:
