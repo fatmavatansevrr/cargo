@@ -20,19 +20,21 @@ public class TrackingService {
     private final KafkaTemplate<String, StatusChangedEvent> kafkaTemplate;
 
 
-    public TrackingHistoryResponse updateStatus(String shipmentId, TrackingState state) {
+    public TrackingHistoryResponse updateStatus(String trackingNumber, TrackingState state) {
         LocalDateTime now = LocalDateTime.now();
 
         TrackingRecord record = new TrackingRecord();
-        record.setShipmentId(shipmentId);
-        record.setStatus(state); // enum
-        record.setUpdatedAt(LocalDateTime.now());
+        record.setShipmentId(trackingNumber); // MongoDB'de shipmentId field'ı trackingNumber'ı tutuyor
+        record.setStatus(state);
+        record.setLocation("İstanbul Transfer Merkezi"); // Varsayılan lokasyon
+        record.setUpdatedBy("system"); // Varsayılan kullanıcı
+        record.setUpdatedAt(now);
 
         repository.save(record);
 
         // Kafka Event yayını
         StatusChangedEvent event = new StatusChangedEvent(
-                shipmentId,
+                trackingNumber,
                 state,
                 "İstanbul Transfer Merkezi", // şimdilik sabit, sonra DTO'dan çekersin
                 "system", // sonra DTO'dan alınır
@@ -42,7 +44,7 @@ public class TrackingService {
         kafkaTemplate.send("shipment-status-events", event);
 
         return new TrackingHistoryResponse(
-                shipmentId,
+                trackingNumber,
                 state,
                 record.getLocation(),
                 record.getUpdatedBy(),
@@ -50,8 +52,8 @@ public class TrackingService {
         );
     }
 
-    public List<TrackingHistoryResponse> getHistory(String shipmentId) {
-        return repository.findByShipmentIdOrderByUpdatedAtDesc(shipmentId)
+    public List<TrackingHistoryResponse> getHistory(String trackingNumber) {
+        return repository.findByShipmentIdOrderByUpdatedAtDesc(trackingNumber)
                 .stream()
                 .map(record -> new TrackingHistoryResponse(
                         record.getShipmentId(),
@@ -76,8 +78,8 @@ public class TrackingService {
                 .toList();
     }
 
-    public Optional<TrackingHistoryResponse> getTrackingInfo(String shipmentId) {
-        return repository.findByShipmentIdOrderByUpdatedAtDesc(shipmentId)
+    public Optional<TrackingHistoryResponse> getTrackingInfo(String trackingNumber) {
+        return repository.findByShipmentIdOrderByUpdatedAtDesc(trackingNumber)
                 .stream()
                 .findFirst()
                 .map(record -> new TrackingHistoryResponse(

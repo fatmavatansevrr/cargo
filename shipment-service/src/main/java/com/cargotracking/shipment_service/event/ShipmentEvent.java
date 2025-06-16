@@ -20,8 +20,8 @@ public class ShipmentEvent {
     private Long shipmentId;
     private String trackingNumber;
     private Long senderUserId;
-    private Shipment.ShipmentStatus status;
-    private Shipment.ShipmentStatus previousStatus;
+    private String status; // ACTIVE, FINISHED, CANCELLED
+    private String previousStatus;
     private LocalDateTime eventTimestamp;
     private String eventSource = "shipment-service";
     private Object eventData; // Detaylı shipment bilgileri
@@ -35,7 +35,7 @@ public class ShipmentEvent {
             shipmentId,
             trackingNumber,
             senderUserId,
-            Shipment.ShipmentStatus.ACTIVE,
+            "ACTIVE",
             null,
             LocalDateTime.now(),
             "shipment-service",
@@ -54,8 +54,8 @@ public class ShipmentEvent {
             shipmentId,
             trackingNumber,
             senderUserId,
-            newStatus,
-            previousStatus,
+            newStatus != null ? newStatus.name() : null,
+            previousStatus != null ? previousStatus.name() : null,
             LocalDateTime.now(),
             "shipment-service",
             shipmentData
@@ -63,7 +63,7 @@ public class ShipmentEvent {
     }
 
     /**
-     * Gönderi iptal edildi olayı
+     * Gönderi tamamlandı olayı
      */
     public static ShipmentEvent finished(Long shipmentId, String trackingNumber, Long senderUserId, Object shipmentData) {
         return new ShipmentEvent(
@@ -71,7 +71,7 @@ public class ShipmentEvent {
                 shipmentId,
                 trackingNumber,
                 senderUserId,
-                Shipment.ShipmentStatus.FINISHED,
+                "FINISHED",
                 null,
                 LocalDateTime.now(),
                 "shipment-service",
@@ -88,7 +88,7 @@ public class ShipmentEvent {
             shipmentId,
             trackingNumber,
             senderUserId,
-            Shipment.ShipmentStatus.CANCELLED,
+            "CANCELLED",
             null,
             LocalDateTime.now(),
             "shipment-service",
