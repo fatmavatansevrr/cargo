@@ -3,78 +3,59 @@ package com.cargotracking.notification_service.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 /**
- * Kullanıcı bildirim tercihleri modeli
- * FR-NT-004: Kullanıcılar hangi durum değişikliklerinde bildirim alacaklarını yönetebilir
+ * Basit NotificationPreference - Sadece temel ayarlar
  */
+@Document(collection = "notification_preferences")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "notification_preferences")
 public class NotificationPreference {
     
     @Id
     private String id;
     
+    @Field("user_id")
+    @Indexed(unique = true)
+    @NotNull(message = "User ID gereklidir")
     private Long userId;
-    private String userEmail;
-    private String userPhone;
     
-    // Bildirim kanalları
+    @Field("email_enabled")
     private boolean emailEnabled = true;
+    
+    @Field("sms_enabled")
     private boolean smsEnabled = false;
-    private boolean pushNotificationEnabled = false;
     
-    // Hangi durum değişikliklerinde bildirim alınacak
-    private Set<String> enabledStatusNotifications = Set.of(
-        "PACKAGE_RECEIVED",     // Kargoya Verildi
-        "IN_TRANSIT",          // Yolda
-        "OUT_FOR_DELIVERY",    // Dağıtıma Çıktı
-        "DELIVERED",           // Teslim Edildi
-        "DELIVERY_FAILED"      // Teslimat Başarısız
-    );
+    @Field("push_enabled")
+    private boolean pushEnabled = false;
     
-    // Hangi event tiplerinde bildirim alınacak
-    private Set<String> enabledEventTypes = Set.of(
-        "shipment.created",
-        "shipment.updated",
-        "status.updated"
-    );
-    
+    @Field("created_at")
+    @CreatedDate
     private LocalDateTime createdAt;
+    
+    @Field("updated_at")
+    @LastModifiedDate
     private LocalDateTime updatedAt;
     
     /**
-     * Belirli bir status için bildirim aktif mi kontrol eder
+     * Belirli kanal aktif mi kontrol et
      */
-    public boolean isNotificationEnabledForStatus(String status) {
-        return enabledStatusNotifications.contains(status);
-    }
-    
-    /**
-     * Belirli bir event tipi için bildirim aktif mi kontrol eder
-     */
-    public boolean isNotificationEnabledForEventType(String eventType) {
-        return enabledEventTypes.contains(eventType);
-    }
-    
-    /**
-     * Email bildirim aktif mi ve email adresi var mı kontrol eder
-     */
-    public boolean canSendEmail() {
-        return emailEnabled && userEmail != null && !userEmail.trim().isEmpty();
-    }
-    
-    /**
-     * SMS bildirim aktif mi ve telefon numarası var mı kontrol eder
-     */
-    public boolean canSendSms() {
-        return smsEnabled && userPhone != null && !userPhone.trim().isEmpty();
+    public boolean isChannelEnabled(Notification.NotificationChannel channel) {
+        return switch (channel) {
+            case EMAIL -> emailEnabled;
+            case SMS -> smsEnabled;
+            case PUSH_NOTIFICATION -> pushEnabled;
+            case IN_APP -> true; // In-app her zaman aktif
+        };
     }
 } 

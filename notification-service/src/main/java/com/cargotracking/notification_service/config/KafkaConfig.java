@@ -1,129 +1,159 @@
 package com.cargotracking.notification_service.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.*;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kafka konfigürasyon sınıfı
- * FR-NT-002: Kafka olaylarını tüketen yapılandırma
+ * KafkaConfig - Kafka consumer configuration
+ * Event-driven notification processing için Kafka ayarları
  */
 @Configuration
 @EnableKafka
-@Slf4j
 public class KafkaConfig {
     
-    @Value("${spring.kafka.bootstrap-servers:kafka:29092}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
     
-    @Value("${spring.kafka.consumer.group-id:notification-service}")
+    @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
     
-    @Value("${spring.kafka.consumer.auto-offset-reset:earliest}")
+    @Value("${spring.kafka.consumer.auto-offset-reset}")
     private String autoOffsetReset;
     
-    @Value("${spring.kafka.consumer.enable-auto-commit:false}")
-    private Boolean enableAutoCommit;
-    
     /**
-     * Kafka consumer factory konfigürasyonu
+     * Kafka Consumer Factory
      */
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         
+        // Bootstrap servers
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);
         
-        // Serialization ayarları
+        // Consumer group
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        
+        // Auto offset reset strategy
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        
+        // Deserializers
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         
-        // Error handling ve performance ayarları
+        // Performance tuning
         configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
         configProps.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000); // 5 minutes
         configProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000); // 30 seconds
         configProps.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000); // 10 seconds
         
-        log.info("Kafka Consumer konfigürasyonu: bootstrapServers={}, groupId={}", 
-                bootstrapServers, groupId);
+        // Reliability settings
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false); // Manual commit
+        configProps.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+        
+        // Retry settings
+        configProps.put(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
+        configProps.put(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG, 5000);
         
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
     
     /**
-     * Kafka listener container factory konfigürasyonu
+     * Kafka Listener Container Factory
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = 
-            new ConcurrentKafkaListenerContainerFactory<>();
+                new ConcurrentKafkaListenerContainerFactory<>();
         
         factory.setConsumerFactory(consumerFactory());
         
-        // Manual acknowledgment mode (commit kontrolü)
+        // Concurrent consumer settings
+        factory.setConcurrency(3); // 3 consumer thread per partition
+        
+        // Acknowledgment mode - manual acknowledgment
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         
-        // Concurrency ayarları (paralel işlem)
-        factory.setConcurrency(3); // 3 paralel consumer thread
-        
         // Error handling
-        factory.setCommonErrorHandler(new org.springframework.kafka.listener.DefaultErrorHandler());
+        factory.setCommonErrorHandler(kafkaErrorHandler());
         
-        log.info("Kafka Listener Container Factory konfigüre edildi");
+        // Batch processing settings
+        factory.setBatchListener(false); // Single record processing
+        
+        // Auto startup
+        factory.setAutoStartup(true);
         
         return factory;
     }
     
     /**
-     * Kafka producer factory (notification eventleri yayınlamak için)
+     * Kafka Error Handler
      */
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
+    public org.springframework.kafka.listener.CommonErrorHandler kafkaErrorHandler() {
+        org.springframework.util.backoff.FixedBackOff fixedBackOff = new org.springframework.util.backoff.FixedBackOff();
+        fixedBackOff.setInterval(1000L); // 1 second retry interval
+        fixedBackOff.setMaxAttempts(3L); // max 3 retry attempts
         
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        
-        // Performance ve reliability ayarları
-        configProps.put(ProducerConfig.ACKS_CONFIG, "all"); // Tüm replica'lardan onay bekle
-        configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
-        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
-        configProps.put(ProducerConfig.LINGER_MS_CONFIG, 5);
-        configProps.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
-        
-        log.info("Kafka Producer konfigürasyonu: bootstrapServers={}", bootstrapServers);
-        
-        return new DefaultKafkaProducerFactory<>(configProps);
+        return new org.springframework.kafka.listener.DefaultErrorHandler(
+            (consumerRecord, exception) -> {
+                // Dead Letter Queue logic can be implemented here
+                System.err.printf("Error processing record: topic=%s, partition=%d, offset=%d, error=%s%n",
+                    consumerRecord.topic(),
+                    consumerRecord.partition(),
+                    consumerRecord.offset(),
+                    exception.getMessage());
+            },
+            fixedBackOff
+        );
     }
     
     /**
-     * Kafka template (event yayınlamak için)
+     * High priority consumer factory for critical notifications
      */
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        KafkaTemplate<String, String> template = new KafkaTemplate<>(producerFactory());
+    public ConsumerFactory<String, String> highPriorityConsumerFactory() {
+        Map<String, Object> configProps = new HashMap<>();
         
-        // Producer callback ayarları
-        template.setDefaultTopic("notification-events");
+        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-priority");
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
+        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         
-        log.info("Kafka Template konfigüre edildi");
+        // Higher priority settings
+        configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 10); // Process fewer records at once
+        configProps.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, 1); // Don't wait for more data
+        configProps.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 500); // Max 500ms wait
         
-        return template;
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        
+        return new DefaultKafkaConsumerFactory<>(configProps);
+    }
+    
+    /**
+     * High priority listener container factory
+     */
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> highPriorityKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = 
+                new ConcurrentKafkaListenerContainerFactory<>();
+        
+        factory.setConsumerFactory(highPriorityConsumerFactory());
+        factory.setConcurrency(5); // More threads for priority processing
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        factory.setCommonErrorHandler(kafkaErrorHandler());
+        
+        return factory;
     }
 } 

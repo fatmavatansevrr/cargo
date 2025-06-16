@@ -193,11 +193,16 @@ services:
         condition: service_started
       kafka:
         condition: service_started
+      mongodb:
+        condition: service_healthy
     networks:
       - cargo-tracking-network
     environment:
-      - KAFKA_SERVERS=kafka:9092
       - EUREKA_URL=http://eureka-server:8761/eureka/
+      - MONGODB_URL=mongodb://localhost:27017/notification_db
+
+    ports:
+      - "8084:8084"
 
   analytics-service:
     build: ./analytics-service
@@ -218,6 +223,8 @@ services:
       - DB_PASSWORD=1234
       - MONGODB_URL=mongodb://mongodb:27017/analytics_db
       - EUREKA_URL=http://eureka-server:8761/eureka/
+    ports:
+      - "8085:8085"
 
 # Named volumes
 volumes:

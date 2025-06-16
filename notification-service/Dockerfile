@@ -16,7 +16,7 @@ RUN ./mvnw dependency:go-offline -B
 COPY src src
 
 # Uygulamayı derle
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -Dmaven.test.skip=true
 
 # JAR dosyasını çalıştır
 EXPOSE 8084
