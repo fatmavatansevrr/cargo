@@ -12,7 +12,7 @@
 	<artifactId>analytics-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>analytics-service</name>
-	<description>Analytics Service for Cargo Tracking System</description>
+	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -68,13 +68,14 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.8.3</version>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-models-jakarta</artifactId>
+			<version>2.2.27</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-models-jakarta</artifactId>
+			<artifactId>swagger-annotations-jakarta</artifactId>
 			<version>2.2.27</version>
 			<scope>compile</scope>
 		</dependency>
@@ -96,15 +97,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.0</version>
 				<configuration>
-					<release>17</release>
-					<parameters>true</parameters>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>

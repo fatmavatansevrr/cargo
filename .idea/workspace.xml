@@ -4,29 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="eureka fix">
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/config/KafkaProducerConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/ShipmentEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/StatusChangedEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/StatusUpdateRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/TrackingHistoryResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/kafka/ShipmentEventListener.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingRecord.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingState.java" afterDir="false" />
+    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="Tracking Service - status updates added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/event/ShipmentEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/event/ShipmentEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Shipment.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/model/Shipment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-repo/user-management-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/user-management-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/event/ShipmentCreatedEventListener.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingStatus.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-management-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/user-management-service/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,11 +27,23 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="arda" />
+        <entry key="$PROJECT_DIR$" value="arda-002" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "bilge-8"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/fatmavatansevrr/cargo-tracking.git",
+    "accountId": "b6439b42-0678-4d88-a566-01de285a7482"
+  }
+}]]></component>
   <component name="HttpClientEndpointsTabState">
     <option name="cachedRequestData" value="&lt;CachedHttpClientTabRequests&gt;&#10;  &lt;entry key=&quot;03ee8ffcfec756d51eb5a84183b7bfae883f3839&quot; value=&quot;###&amp;#10;POST http://localhost:8081/api/auth/register&amp;#10;Content-Type: application/json&amp;#10;&amp;#10;{&amp;#10;  &amp;quot;username&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;email&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;password&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;firstName&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;lastName&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;phone&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;address&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;roles&amp;quot;: []&amp;#10;}&quot; /&gt;&#10;&lt;/CachedHttpClientTabRequests&gt;" />
   </component>
@@ -77,6 +72,8 @@
     "RequestMappingsPanelWidth0": "75",
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Spring Boot.AnalyticsServiceApplication.executor": "Run",
     "Spring Boot.ApiGatewayApplication.executor": "Run",
@@ -86,7 +83,7 @@
     "Spring Boot.ShipmentServiceApplication.executor": "Run",
     "Spring Boot.TrackingServiceApplication.executor": "Run",
     "Spring Boot.UserManagementServiceApplication.executor": "Run",
-    "git-widget-placeholder": "bilge-002",
+    "git-widget-placeholder": "bilge-003",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/vatan/Desktop/4.SINIF/4.sınıf dönem 2/microservices/cargo-tracking/user-management-service",
@@ -194,8 +191,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9f38398b9061-39b83d9b5494-intellij.indexing.shared.core-IU-241.17890.1" />
-        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-IU-241.17890.1" />
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26094.121" />
+        <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-IU-251.26094.121" />
       </set>
     </attachedChunks>
   </component>
@@ -211,6 +208,7 @@
       <option name="presentableId" value="Default" />
       <updated>1749746122576</updated>
       <workItem from="1749752092254" duration="1237000" />
+      <workItem from="1750065300446" duration="4717000" />
     </task>
     <task id="LOCAL-00001" summary="tracking service">
       <option name="closed" value="true" />
@@ -236,7 +234,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750003674444</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Tracking Service - status updates added">
+      <option name="closed" value="true" />
+      <created>1750017969732</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1750017969732</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -249,7 +255,8 @@
     <MESSAGE value="tracking service" />
     <MESSAGE value="tracking_db fix" />
     <MESSAGE value="eureka fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="eureka fix" />
+    <MESSAGE value="Tracking Service - status updates added" />
+    <option name="LAST_COMMIT_MESSAGE" value="Tracking Service - status updates added" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

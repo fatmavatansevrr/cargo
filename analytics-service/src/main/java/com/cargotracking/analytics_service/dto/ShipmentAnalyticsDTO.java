@@ -10,9 +10,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * Shipment Analytics DTO - Analitik veriler için veri transfer objesi
- */
 @Data
 @Builder
 @NoArgsConstructor

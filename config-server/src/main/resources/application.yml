@@ -2,14 +2,6 @@ server:
   port: 8888
 
 spring:
-  datasource:
-    url: jdbc:postgresql://postgres:5432/userdb
-    username: postgres
-    password: 1234
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
   application:
     name: config-server
   cloud:

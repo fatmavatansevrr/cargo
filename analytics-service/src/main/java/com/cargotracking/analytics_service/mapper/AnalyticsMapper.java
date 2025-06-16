@@ -4,6 +4,8 @@ import com.cargotracking.analytics_service.dto.CarrierPerformanceDTO;
 import com.cargotracking.analytics_service.dto.ShipmentAnalyticsDTO;
 import com.cargotracking.analytics_service.dto.StatusDistributionDTO;
 import com.cargotracking.analytics_service.model.ShipmentAnalytics;
+import com.cargotracking.analytics_service.service.impl.AnalyticsServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -14,16 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Analytics Mapper - DTO ve Entity dönüşümleri
- * Circular dependency'yi önlemek için service injection yok
- */
 @Component
+@RequiredArgsConstructor
 public class AnalyticsMapper {
 
-    /**
-     * ShipmentAnalytics entity'sini DTO'ya dönüştürür
-     */
+    private final AnalyticsServiceImpl analyticsService;
+
     public ShipmentAnalyticsDTO toDTO(ShipmentAnalytics analytics) {
         if (analytics == null) {
             return ShipmentAnalyticsDTO.builder()
@@ -62,9 +60,6 @@ public class AnalyticsMapper {
                 .build();
     }
 
-    /**
-     * ShipmentAnalyticsDTO'yu entity'ye dönüştürür
-     */
     public ShipmentAnalytics toEntity(ShipmentAnalyticsDTO dto) {
         if (dto == null) {
             return null;
@@ -81,18 +76,12 @@ public class AnalyticsMapper {
         return analytics;
     }
 
-    /**
-     * Analytics listesini DTO listesine dönüştürür
-     */
     public List<ShipmentAnalyticsDTO> toDTOList(List<ShipmentAnalytics> analytics) {
         return analytics.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Carrier performance DTO'su oluşturur
-     */
     public CarrierPerformanceDTO toCarrierPerformanceDTO(String carrierId, List<ShipmentAnalytics> analytics) {
         long totalShipments = analytics.size();
         long successfulDeliveries = analytics.stream()
@@ -128,9 +117,6 @@ public class AnalyticsMapper {
                 .build();
     }
 
-    /**
-     * Status distribution DTO'su oluşturur
-     */
     public StatusDistributionDTO toStatusDistributionDTO(List<ShipmentAnalytics> analytics) {
         // Calculate status distribution for all shipments in the provided list
         Map<String, Long> statusCounts = analytics.stream()

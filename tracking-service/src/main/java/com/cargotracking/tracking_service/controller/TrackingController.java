@@ -44,7 +44,7 @@ public class TrackingController {
      * Kargo durumu güncelleme - sadece Carrier ve Admin yetkilidir
      * FR-TR-002 gibi bir gereksinimle eşlenebilir
      */
-    @PatchMapping("/{trackingNumber}/status")
+    @PutMapping("/{trackingNumber}/status")
     // @PreAuthorize("hasAnyRole('CARRIER', 'ADMIN')") // Test için geçici olarak kapalı
     @Operation(summary = "Takip durumu güncelle", description = "Kargonun mevcut durumunu günceller")
     public ResponseEntity<TrackingHistoryResponse> updateStatus(

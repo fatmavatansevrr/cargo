@@ -3,19 +3,12 @@ package com.cargotracking.analytics_service.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * Status Distribution DTO - Durum dağılım analizi
- */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "Shipment Status Distribution Analytics")
 public class StatusDistributionDTO {
     @Schema(description = "Distribution of shipments by status")

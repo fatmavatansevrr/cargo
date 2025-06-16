@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Analytics Controller - Requirements FR-AN-001 to FR-AN-005
- * Kargo takip sistemi için analitik verilerin yönetimi
- */
 @RestController
 @RequestMapping("/api/v1/analytics")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "Analytics", description = "Analytics API for cargo tracking system")
 public class AnalyticsController {
 
@@ -46,16 +40,9 @@ public class AnalyticsController {
     public ResponseEntity<ShipmentAnalyticsDTO> saveAnalytics(
             @Parameter(description = "Shipment analytics data", required = true)
             @RequestBody ShipmentAnalyticsDTO analyticsDTO) {
-        try {
-            System.out.println("Analytics data save request: shipmentId=" + analyticsDTO.getShipmentId());
             return ResponseEntity.ok(analyticsMapper.toDTO(
                 analyticsService.saveAnalytics(analyticsMapper.toEntity(analyticsDTO))
             ));
-        } catch (Exception e) {
-            System.err.println("Analytics data save error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/carrier/{carrierId}")
@@ -67,16 +54,9 @@ public class AnalyticsController {
     public ResponseEntity<List<ShipmentAnalyticsDTO>> getAnalyticsByCarrier(
             @Parameter(description = "Carrier ID", required = true)
             @PathVariable String carrierId) {
-        try {
-            System.out.println("Analytics by carrier request: carrierId=" + carrierId);
             return ResponseEntity.ok(analyticsMapper.toDTOList(
                 analyticsService.getAnalyticsByCarrier(carrierId)
             ));
-        } catch (Exception e) {
-            System.err.println("Analytics by carrier error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/shipper/{shipperId}")
@@ -88,16 +68,9 @@ public class AnalyticsController {
     public ResponseEntity<List<ShipmentAnalyticsDTO>> getAnalyticsByShipper(
             @Parameter(description = "Shipper ID", required = true)
             @PathVariable String shipperId) {
-        try {
-            System.out.println("Analytics by shipper request: shipperId=" + shipperId);
             return ResponseEntity.ok(analyticsMapper.toDTOList(
                 analyticsService.getAnalyticsByShipper(shipperId)
             ));
-        } catch (Exception e) {
-            System.err.println("Analytics by shipper error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/customer/{customerId}")
@@ -109,16 +82,9 @@ public class AnalyticsController {
     public ResponseEntity<List<ShipmentAnalyticsDTO>> getAnalyticsByCustomer(
             @Parameter(description = "Customer ID", required = true)
             @PathVariable String customerId) {
-        try {
-            System.out.println("Analytics by customer request: customerId=" + customerId);
             return ResponseEntity.ok(analyticsMapper.toDTOList(
                 analyticsService.getAnalyticsByCustomer(customerId)
             ));
-        } catch (Exception e) {
-            System.err.println("Analytics by customer error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/date-range")
@@ -132,16 +98,9 @@ public class AnalyticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "End date and time (ISO format)", required = true)
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        try {
-            System.out.println("Analytics by date range request: startDate=" + startDate + ", endDate=" + endDate);
             return ResponseEntity.ok(analyticsMapper.toDTOList(
                 analyticsService.getAnalyticsByDateRange(startDate, endDate)
             ));
-        } catch (Exception e) {
-            System.err.println("Analytics by date range error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/carrier/{carrierId}/performance")
@@ -154,17 +113,10 @@ public class AnalyticsController {
     public ResponseEntity<CarrierPerformanceDTO> getCarrierPerformance(
             @Parameter(description = "Carrier ID", required = true)
             @PathVariable String carrierId) {
-        try {
-            System.out.println("Carrier performance request: carrierId=" + carrierId);
             return ResponseEntity.ok(analyticsMapper.toCarrierPerformanceDTO(
                 carrierId,
                 analyticsService.getAnalyticsByCarrier(carrierId)
             ));
-        } catch (Exception e) {
-            System.err.println("Carrier performance error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/status-distribution")
@@ -174,15 +126,8 @@ public class AnalyticsController {
             content = @Content(schema = @Schema(implementation = StatusDistributionDTO.class)))
     })
     public ResponseEntity<StatusDistributionDTO> getStatusDistribution() {
-        try {
-            System.out.println("Status distribution request");
             return ResponseEntity.ok(analyticsMapper.toStatusDistributionDTO(
                 analyticsService.getAllAnalytics()
             ));
-        } catch (Exception e) {
-            System.err.println("Status distribution error: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
     }
 } 

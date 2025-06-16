@@ -10,9 +10,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * Carrier Performance DTO - Taşıyıcı performans metrikleri
- */
 @Data
 @Builder
 @NoArgsConstructor
