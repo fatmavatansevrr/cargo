@@ -15,14 +15,14 @@ interface AddressDto {
 }
 
 interface PackageDto {
-  weight: number;
-  length: number;
-  width: number;
-  height: number;
+    weight: number;
+      length: number;
+      width: number;
+      height: number;
   contentType: 'DOCUMENTS' | 'ELECTRONICS' | 'CLOTHING' | 'FOOD' | 'FRAGILE' | 'OTHER';
   contentDescription?: string;
   declaredValue: number;
-  isFragile: boolean;
+    isFragile: boolean;
   requiresSignature: boolean;
 }
 
@@ -48,32 +48,32 @@ const CreateShipmentPage: React.FC = () => {
   
   // Form state - Başlangıç değerleri ile
   const [formData, setFormData] = useState<CreateShipmentRequest>({
-    senderAddress: {
+      senderAddress: {
       fullName: '',
       addressLine1: '',
       addressLine2: '',
-      city: '',
-      state: '',
-      postalCode: '',
+        city: '',
+        state: '',
+        postalCode: '',
       country: 'Türkiye',
       phone: '',
       email: '',
-    },
-    recipientAddress: {
+      },
+      recipientAddress: {
       fullName: '',
       addressLine1: '',
       addressLine2: '',
-      city: '',
-      state: '',
-      postalCode: '',
+        city: '',
+        state: '',
+        postalCode: '',
       country: 'Türkiye',
       phone: '',
       email: '',
-    },
+      },
     packageInfo: {
-      weight: 0,
-      length: 0,
-      width: 0,
+        weight: 0,
+          length: 0,
+          width: 0,
       height: 0,
       contentType: 'OTHER',
       contentDescription: '',
@@ -113,8 +113,14 @@ const CreateShipmentPage: React.FC = () => {
     setLoading(true);
     setError(null);
     
+    console.log('📤 Gönderi oluşturma isteği gönderiliyor:', {
+      url: 'http://localhost:8080/api/shipments',
+      method: 'POST',
+      data: formData
+    });
+    
     try {
-      const response = await fetch('/api/shipments', {
+      const response = await fetch('http://localhost:8080/api/shipments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,30 +128,53 @@ const CreateShipmentPage: React.FC = () => {
         body: JSON.stringify(formData),
       });
       
+      console.log('📥 Response alındı:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      });
+      
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+        
+        // HTML response geliyorsa API'ye ulaşamıyoruz demektir
+        if (errorText.includes('<!DOCTYPE')) {
+          throw new Error(`API servisine ulaşılamıyor. Status: ${response.status}`);
+        }
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        
         throw new Error(errorData.message || 'Gönderi oluşturulamadı');
       }
       
       const result = await response.json();
+      console.log('✅ Gönderi başarıyla oluşturuldu:', result);
       alert(`Gönderi başarıyla oluşturuldu! Takip numarası: ${result.trackingNumber}`);
       navigate('/dashboard');
       
     } catch (err) {
+      console.error('❌ Gönderi oluşturma hatası:', err);
       setError(err instanceof Error ? err.message : 'Bir hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
+        return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           <div className="bg-blue-600 px-6 py-4">
             <h1 className="text-2xl font-bold text-white">Yeni Gönderi Oluştur</h1>
             <p className="text-blue-100 mt-1">Kargo gönderinizi detaylarıyla birlikte oluşturun</p>
-          </div>
+            </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             {error && (
@@ -191,7 +220,7 @@ const CreateShipmentPage: React.FC = () => {
                     onChange={(e) => handleInputChange('senderAddress.email', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                </div>
+            </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Adres Satırı 1 <span className="text-red-500">*</span>
@@ -291,8 +320,8 @@ const CreateShipmentPage: React.FC = () => {
                     value={formData.recipientAddress.phone}
                     onChange={(e) => handleInputChange('recipientAddress.phone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+                    />
+                  </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     E-posta
@@ -373,8 +402,8 @@ const CreateShipmentPage: React.FC = () => {
                     onChange={(e) => handleInputChange('recipientAddress.country', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
-                  />
-                </div>
+                    />
+                  </div>
               </div>
             </div>
 
@@ -387,7 +416,7 @@ const CreateShipmentPage: React.FC = () => {
                     Ağırlık (kg) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
+                      type="number"
                     min="0.1"
                     step="0.1"
                     value={formData.packageInfo.weight}
@@ -401,7 +430,7 @@ const CreateShipmentPage: React.FC = () => {
                     Uzunluk (cm) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
+                        type="number"
                     min="1"
                     value={formData.packageInfo.length}
                     onChange={(e) => handleInputChange('packageInfo.length', parseFloat(e.target.value))}
@@ -414,7 +443,7 @@ const CreateShipmentPage: React.FC = () => {
                     Genişlik (cm) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
+                        type="number"
                     min="1"
                     value={formData.packageInfo.width}
                     onChange={(e) => handleInputChange('packageInfo.width', parseFloat(e.target.value))}
@@ -427,7 +456,7 @@ const CreateShipmentPage: React.FC = () => {
                     Yükseklik (cm) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
+                        type="number"
                     min="1"
                     value={formData.packageInfo.height}
                     onChange={(e) => handleInputChange('packageInfo.height', parseFloat(e.target.value))}
@@ -504,7 +533,7 @@ const CreateShipmentPage: React.FC = () => {
                   />
                   <span className="ml-2 text-sm text-gray-700">İmza Gerekli</span>
                 </label>
-              </div>
+            </div>
             </div>
 
             {/* Hizmet Tipi ve Ek Bilgiler */}
@@ -568,7 +597,7 @@ const CreateShipmentPage: React.FC = () => {
                   placeholder="İç notlarınız..."
                 />
               </div>
-            </div>
+                </div>
 
             {/* Form Buttons */}
             <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
@@ -594,4 +623,4 @@ const CreateShipmentPage: React.FC = () => {
   );
 };
 
-export default CreateShipmentPage; 
+export default CreateShipmentPage;

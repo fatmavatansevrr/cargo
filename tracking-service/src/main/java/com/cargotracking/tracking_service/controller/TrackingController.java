@@ -46,16 +46,37 @@ public class TrackingController {
      */
     @PutMapping("/{trackingNumber}/status")
     // @PreAuthorize("hasAnyRole('CARRIER', 'ADMIN')") // Test için geçici olarak kapalı
-    @Operation(summary = "Takip durumu güncelle", description = "Kargonun mevcut durumunu günceller")
+    @Operation(summary = "Takip durumu güncelle (PUT)", description = "Kargonun mevcut durumunu günceller")
     public ResponseEntity<TrackingHistoryResponse> updateStatus(
             @PathVariable String trackingNumber,
             @RequestParam TrackingState newState) {
 
-        log.info("Durum güncelleme isteği: tracking={}, state={}", trackingNumber, newState);
+        log.info("Durum güncelleme isteği (PUT): tracking={}, state={}", trackingNumber, newState);
         try {
             TrackingHistoryResponse response = trackingService.updateStatus(trackingNumber, newState);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Kargo durumu güncelleme (PATCH) - sadece Carrier ve Admin yetkilidir
+     * Takip durumu güncelle endpoint'i
+     */
+    @PatchMapping("/{trackingNumber}/status")
+    // @PreAuthorize("hasAnyRole('CARRIER', 'ADMIN')") // Test için geçici olarak kapalı
+    @Operation(summary = "Takip durumu güncelle", description = "Kargonun mevcut durumunu günceller")
+    public ResponseEntity<TrackingHistoryResponse> patchUpdateStatus(
+            @PathVariable String trackingNumber,
+            @RequestParam TrackingState newState) {
+
+        log.info("Durum güncelleme isteği (PATCH): tracking={}, state={}", trackingNumber, newState);
+        try {
+            TrackingHistoryResponse response = trackingService.updateStatus(trackingNumber, newState);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.error("Durum güncelleme hatası: tracking={}, error={}", trackingNumber, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

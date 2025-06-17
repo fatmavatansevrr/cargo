@@ -10,7 +10,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: cargotracking
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
     ports:
@@ -136,7 +136,7 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/user_management_db
       - DB_USERNAME=postgres
-      - DB_PASSWORD=1234
+      - DB_PASSWORD=postgres
       - EUREKA_URL=http://eureka-server:8761/eureka/
 
   shipment-service:
@@ -157,9 +157,9 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/shipment_db
       - DB_USERNAME=postgres
-      - DB_PASSWORD=1234
+      - DB_PASSWORD=postgres
       - EUREKA_URL=http://eureka-server:8761/eureka/
-      - KAFKA_SERVERS=kafka:29092
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
 
   tracking-service:
     build: ./tracking-service
@@ -172,6 +172,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      kafka:
+        condition: service_started
     networks:
       - cargo-tracking-network
     environment:
@@ -179,6 +181,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - EUREKA_URL=http://eureka-server:8761/eureka/
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     ports:
       - "8083:8083"
 
@@ -197,7 +200,8 @@ services:
       - cargo-tracking-network
     environment:
       - EUREKA_URL=http://eureka-server:8761/eureka/
-      - MONGODB_URL=mongodb://localhost:27017/notification_db
+      - MONGODB_URL=mongodb://mongodb:27017/notification_db
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
 
     ports:
       - "8084:8084"
@@ -218,7 +222,7 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/analytics_db
       - DB_USERNAME=postgres
-      - DB_PASSWORD=1234
+      - DB_PASSWORD=postgres
       - MONGODB_URL=mongodb://mongodb:27017/analytics_db
       - EUREKA_URL=http://eureka-server:8761/eureka/
     ports:

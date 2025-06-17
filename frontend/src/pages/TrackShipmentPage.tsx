@@ -18,14 +18,30 @@ const TrackShipmentPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    console.log('🔍 Takip isteği gönderiliyor:', {
+      url: `http://localhost:8080/api/tracking/${trackingNumber}`,
+      trackingNumber
+    });
+
     try {
-      const response = await fetch(`/api/tracking/${trackingNumber}`);
+      const response = await fetch(`http://localhost:8080/api/tracking/${trackingNumber}`);
+      
+      console.log('📥 Takip response alındı:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url
+      });
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Takip error response:', errorText);
         throw new Error('Takip numarası bulunamadı');
       }
       const data = await response.json();
+      console.log('✅ Takip verisi alındı:', data);
       setTrackingData(data);
     } catch (err) {
+      console.error('❌ Takip hatası:', err);
       setError(err instanceof Error ? err.message : 'Bir hata oluştu');
       setTrackingData(null);
     } finally {
