@@ -3,10 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import CreateShipmentPage from './pages/CreateShipmentPage';
 import TrackShipmentPage from './pages/TrackShipmentPage';
+import NotificationsPage from './pages/NotificationsPage';
+import ReportsPage from './pages/ReportsPage';
 
 // React Query client
 const queryClient = new QueryClient({
@@ -37,7 +41,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return <>{children}</>;
 };
 
 // Public Route component (sadece giriş yapmamış kullanıcılar için)
@@ -58,6 +62,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // Placeholder page component
 const PlaceholderPage: React.FC<{ title: string; description?: string }> = ({ title, description = "Yakında gelecek..." }) => (
   <div className="min-h-screen bg-gray-50">
+    <Header />
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
@@ -100,6 +105,15 @@ const App: React.FC = () => {
               element={
                 <PublicRoute>
                   <LoginPage />
+                </PublicRoute>
+              }
+            />
+            
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <RegisterPage />
                 </PublicRoute>
               }
             />
@@ -155,7 +169,7 @@ const App: React.FC = () => {
               path="/notifications"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage title="Bildirimler" />
+                  <NotificationsPage />
                 </ProtectedRoute>
               }
             />
@@ -164,7 +178,7 @@ const App: React.FC = () => {
               path="/reports"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage title="Raporlar" />
+                  <ReportsPage />
                 </ProtectedRoute>
               }
             />

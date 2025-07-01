@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 
 // Backend DTO'larına uygun TypeScript interface'leri
 interface AddressDto {
@@ -168,8 +169,9 @@ const CreateShipmentPage: React.FC = () => {
   };
 
         return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           <div className="bg-blue-600 px-6 py-4">
             <h1 className="text-2xl font-bold text-white">Yeni Gönderi Oluştur</h1>

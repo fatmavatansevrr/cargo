@@ -1,0 +1,67 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: tracking-service
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URL:mongodb://localhost:27017/tracking_db}
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    consumer:
+      group-id: tracking-group
+      auto-offset-reset: earliest
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring:
+          deserializer:
+            key:
+              delegate:
+                class: org.apache.kafka.common.serialization.StringDeserializer
+            value:
+              delegate:
+                class: org.springframework.kafka.support.serializer.JsonDeserializer
+          json:
+            trusted:
+              packages: "*"
+            use:
+              type:
+                info:
+                  headers: false
+            value:
+              default:
+                type: com.cargotracking.tracking_service.dto.ShipmentEvent
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    preferIpAddress: true
+
+tracking:
+  status:
+    topic: shipment-status-events
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+
+logging:
+  level:
+    com.cargotracking.tracking_service: DEBUG
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: INFO
+    org.springframework.kafka.listener: DEBUG

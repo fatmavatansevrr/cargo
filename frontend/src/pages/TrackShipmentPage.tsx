@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 
 const TrackShipmentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,8 +51,9 @@ const TrackShipmentPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="bg-blue-600 px-6 py-4">
             <h1 className="text-2xl font-bold text-white">Kargo Takip</h1>

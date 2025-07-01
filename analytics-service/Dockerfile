@@ -11,6 +11,7 @@ COPY pom.xml .
 
 # Bağımlılıkları indir
 RUN ./mvnw dependency:go-offline -B
+RUN apt-get update && apt-get install -y curl
 
 # Kaynak kodunu kopyala
 COPY src src

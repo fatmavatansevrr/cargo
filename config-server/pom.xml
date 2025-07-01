@@ -22,24 +22,38 @@
 	</properties>
 
 	<dependencies>
-		<!-- Config Server -->
+
+		<!-- Spring Cloud Config Server -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-config-server</artifactId>
 		</dependency>
 
-		<!-- Eureka Client (isteğe bağlı) -->
+		<!-- Eureka Client (Opsiyonel: Eğer config-server'ı Eureka'ya register etmek istersen) -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 
-		<!-- Test -->
+		<!-- Spring Boot Starter Web (Zorunlu: Config Server HTTP üzerinden çalışır) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Actuator (isteğe bağlı: health check ve metrics için önerilir) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>

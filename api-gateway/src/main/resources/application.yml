@@ -1,28 +1,44 @@
-server:
-  port: 8080
-
 spring:
+  application:
+    name: api-gateway
+
+  config:
+    import: "configserver:${CONFIG_SERVER_URL:http://config-server:8888}"
+
   cloud:
-    gateway:
-      routes:
-        - id: user-management-auth
-          uri: lb://user-management-service
-          predicates:
-            - Path=/api/auth/**
-        - id: user-management-service
-          uri: lb://user-management-service
-          predicates:
-            - Path=/api/users/**
-        - id: shipment-service
-          uri: lb://shipment-service
-          predicates:
-            - Path=/api/shipments/**
+    config:
+      enabled: true
+      uri: ${CONFIG_SERVER_URL:http://config-server:8888}
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
 
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}
+  instance:
+    preferIpAddress: true
+    instanceId: ${spring.application.name}:${server.port}
+
+jwt:
+  secret: MySecretKeyForJWTSigningMustBeAtLeast256BitsLongForSecurityReasons123456789
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
-    com.netflix.discovery: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    com.cargotracking: DEBUG

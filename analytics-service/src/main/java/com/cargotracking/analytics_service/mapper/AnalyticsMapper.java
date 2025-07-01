@@ -41,8 +41,8 @@ public class AnalyticsMapper {
         Double deliveryTime = null;
         if (analytics.getEstimatedDeliveryTime() != null && analytics.getActualDeliveryTime() != null) {
             deliveryTime = (double) ChronoUnit.HOURS.between(
-                analytics.getEstimatedDeliveryTime(),
-                analytics.getActualDeliveryTime()
+                    analytics.getEstimatedDeliveryTime(),
+                    analytics.getActualDeliveryTime()
             );
         }
 
@@ -50,13 +50,13 @@ public class AnalyticsMapper {
                 .shipmentId(analytics.getShipmentId())
                 .carrierId(analytics.getCarrierId())
                 .status(analytics.getStatus())
-                .totalShipments(1L)
-                .totalRevenue(BigDecimal.ZERO) // No revenue field in model
-                .averageDeliveryTime(deliveryTime != null ? deliveryTime : 0.0)
+                .totalShipments(analytics.getTotalShipments() != null ? analytics.getTotalShipments() : 1L)
+                .totalRevenue(analytics.getTotalRevenue() != null ? analytics.getTotalRevenue() : BigDecimal.ZERO)
+                .averageDeliveryTime(analytics.getAverageDeliveryTime() != null ? analytics.getAverageDeliveryTime() : (deliveryTime != null ? deliveryTime : 0.0))
                 .deliveryDelayHours(analytics.getDeliveryDelayHours())
-                .customerSatisfaction(0.0) // No satisfaction field in model
+                .customerSatisfaction(analytics.getCustomerSatisfaction() != null ? analytics.getCustomerSatisfaction() : 0.0)
                 .shipmentsByStatus(statusMap)
-                .timestamp(analytics.getStatusTimestamp())
+                .timestamp(analytics.getTimestamp() != null ? analytics.getTimestamp() : analytics.getStatusTimestamp())
                 .build();
     }
 
@@ -72,7 +72,11 @@ public class AnalyticsMapper {
         analytics.setStatus(dto.getStatus());
         analytics.setDeliveryDelayHours(dto.getDeliveryDelayHours());
         analytics.setStatusTimestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now());
-        // estimatedDeliveryTime and actualDeliveryTime are not set from DTO (not present)
+        analytics.setTotalShipments(dto.getTotalShipments());
+        analytics.setTotalRevenue(dto.getTotalRevenue());
+        analytics.setAverageDeliveryTime(dto.getAverageDeliveryTime());
+        analytics.setCustomerSatisfaction(dto.getCustomerSatisfaction());
+        analytics.setTimestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now());
         return analytics;
     }
 
@@ -88,7 +92,7 @@ public class AnalyticsMapper {
                 .filter(sa -> sa.getDeliveryDelayHours() != null && sa.getDeliveryDelayHours() <= 0)
                 .count();
         long delayedDeliveries = totalShipments - successfulDeliveries;
-        
+
         double onTimeDeliveryRate = totalShipments > 0 ? (double) successfulDeliveries / totalShipments : 0.0;
         double averageDelayTime = analytics.stream()
                 .filter(sa -> sa.getDeliveryDelayHours() != null)
@@ -103,15 +107,35 @@ public class AnalyticsMapper {
                         Collectors.counting()
                 ));
 
+        // Calculate total revenue and average satisfaction
+        BigDecimal totalRevenue = analytics.stream()
+                .filter(sa -> sa.getTotalRevenue() != null)
+                .map(ShipmentAnalytics::getTotalRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        double avgSatisfaction = analytics.stream()
+                .filter(sa -> sa.getCustomerSatisfaction() != null && sa.getCustomerSatisfaction() > 0)
+                .mapToDouble(ShipmentAnalytics::getCustomerSatisfaction)
+                .average()
+                .orElse(0.0);
+
+        // Calculate average delivery time
+        double avgDeliveryTime = analytics.stream()
+                .filter(sa -> sa.getAverageDeliveryTime() != null)
+                .mapToDouble(ShipmentAnalytics::getAverageDeliveryTime)
+                .average()
+                .orElse(0.0);
+
         return CarrierPerformanceDTO.builder()
                 .carrierId(carrierId)
                 .totalShipments(totalShipments)
                 .onTimeDeliveryRate(onTimeDeliveryRate)
+                .averageDeliveryTime(avgDeliveryTime)
                 .averageDelayTime(averageDelayTime)
                 .delayedDeliveries(delayedDeliveries)
-                .satisfactionRating(0.0) // No satisfaction data in model
+                .satisfactionRating(avgSatisfaction)
                 .deliveriesByStatus(deliveriesByStatus)
-                .totalRevenue(BigDecimal.ZERO) // No revenue data in model
+                .totalRevenue(totalRevenue)
                 .periodStart(LocalDateTime.now().minusMonths(1))
                 .periodEnd(LocalDateTime.now())
                 .build();

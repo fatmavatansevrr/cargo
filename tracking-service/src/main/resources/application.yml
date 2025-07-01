@@ -1,6 +1,6 @@
 spring:
   application:
-    name: user-management-service
+    name: tracking-service
   config:
     import: "configserver:${CONFIG_SERVER_URL:http://config-server:8888}"
   cloud:

@@ -5,11 +5,88 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="Tracking Service - status updates added">
+      <change afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/config/CorsConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/model/AnalyticsReadModel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analytics-service/src/main/resources/application.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/cargotracking/api_gateway/config/GatewayConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/cargotracking/api_gateway/security/JwtAuthenticationFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config-repo/application.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shipment-service/src/main/resources/application.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/AnalyticsServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/AnalyticsServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/controller/AnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/controller/AnalyticsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/mapper/AnalyticsMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/mapper/AnalyticsMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/model/ShipmentAnalytics.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/model/ShipmentAnalytics.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/repository/jpa/ShipmentAnalyticsRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/repository/jpa/ShipmentAnalyticsRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/service/AnalyticsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/service/AnalyticsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/service/impl/AnalyticsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/src/main/java/com/cargotracking/analytics_service/service/impl/AnalyticsServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics-service/src/main/resources/bootstrap.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/bootstrap.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-repo/analytics-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/analytics-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-repo/api-gateway.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/api-gateway.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-repo/notification-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/notification-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-repo/shipment-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/shipment-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-repo/tracking-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/tracking-service.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config-repo/user-management-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/user-management-service.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-management-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/user-management-service/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eureka-server/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eureka-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eureka-server/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eureka-server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/public/robots.txt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/public/robots.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.test.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/NetworkDebug.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/NetworkDebug.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Sidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/context/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/context/AuthContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CreateShipmentPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/CreateShipmentPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DashboardPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DashboardPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/TrackShipmentPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/TrackShipmentPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/TrackingPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/TrackingPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/react-app-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/react-app-env.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/reportWebVitals.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/reportWebVitals.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/services/authService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/authService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/services/shipmentService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/shipmentService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/setupTests.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/setupTests.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/logs/notification-service.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/resources/application-test.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/resources/bootstrap.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/resources/bootstrap.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/bootstrap.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-management-service/dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/user-management-service/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-management-service/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-management-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/user-management-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-management-service/src/main/resources/bootstrap.yml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,18 +109,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "bilge-8"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;bilge-8&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/fatmavatansevrr/cargo-tracking.git",
-    "accountId": "b6439b42-0678-4d88-a566-01de285a7482"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/fatmavatansevrr/cargo-tracking.git&quot;,
+    &quot;accountId&quot;: &quot;2f199179-b6a1-41cb-8666-70fd924649cf&quot;
   }
-}]]></component>
+}</component>
   <component name="HttpClientEndpointsTabState">
     <option name="cachedRequestData" value="&lt;CachedHttpClientTabRequests&gt;&#10;  &lt;entry key=&quot;03ee8ffcfec756d51eb5a84183b7bfae883f3839&quot; value=&quot;###&amp;#10;POST http://localhost:8081/api/auth/register&amp;#10;Content-Type: application/json&amp;#10;&amp;#10;{&amp;#10;  &amp;quot;username&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;email&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;password&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;firstName&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;lastName&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;phone&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;address&amp;quot;: &amp;quot;&amp;quot;,&amp;#10;  &amp;quot;roles&amp;quot;: []&amp;#10;}&quot; /&gt;&#10;&lt;/CachedHttpClientTabRequests&gt;" />
   </component>
@@ -62,49 +139,52 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Maven.cargo-tracking-system [clean].executor": "Run",
-    "Maven.cargo-tracking-system [install].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Spring Boot.AnalyticsServiceApplication.executor": "Run",
-    "Spring Boot.ApiGatewayApplication.executor": "Run",
-    "Spring Boot.ConfigServerApplication.executor": "Run",
-    "Spring Boot.EurekaServerApplication.executor": "Run",
-    "Spring Boot.NotificationServiceApplication.executor": "Run",
-    "Spring Boot.ShipmentServiceApplication.executor": "Run",
-    "Spring Boot.TrackingServiceApplication.executor": "Run",
-    "Spring Boot.UserManagementServiceApplication.executor": "Run",
-    "git-widget-placeholder": "bilge-003",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/vatan/Desktop/4.SINIF/4.sınıf dönem 2/microservices/cargo-tracking/user-management-service",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Docker.docker-compose.yml.analytics-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.analytics-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.analytics-service [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.cargo-tracking-system [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.cargo-tracking-system [install].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.AnalyticsServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ConfigServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.NotificationServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ShipmentServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.TrackingServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.UserManagementServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;arda-002+fatma&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/vatan/Desktop/4.SINIF/4.sınıf dönem 2/microservices/cargo-tracking/user-management-service&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\user-management-service" />
@@ -130,7 +210,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.AnalyticsServiceApplication">
+  <component name="RunManager" selected="Docker.docker-compose.yml.analytics-service: Compose Deployment">
     <configuration name="AnalyticsServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="analytics-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.cargotracking.analytics_service.AnalyticsServiceApplication" />
@@ -187,6 +267,30 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration name="docker-compose.yml.analytics-service: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="services">
+            <list>
+              <option value="analytics-service" />
+            </list>
+          </option>
+          <option name="sourceFilePath" value="docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Docker.docker-compose.yml.analytics-service: Compose Deployment" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -209,6 +313,12 @@
       <updated>1749746122576</updated>
       <workItem from="1749752092254" duration="1237000" />
       <workItem from="1750065300446" duration="4717000" />
+      <workItem from="1751193054774" duration="818000" />
+      <workItem from="1751194015828" duration="12061000" />
+      <workItem from="1751216661089" duration="18298000" />
+      <workItem from="1751363413209" duration="234000" />
+      <workItem from="1751363771696" duration="2562000" />
+      <workItem from="1751366784269" duration="5442000" />
     </task>
     <task id="LOCAL-00001" summary="tracking service">
       <option name="closed" value="true" />

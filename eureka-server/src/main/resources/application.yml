@@ -1,11 +1,57 @@
+# application.yml - Eureka Server Configuration
+
 spring:
   application:
     name: eureka-server
+  # Config Server ayarları
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
 
 server:
   port: 8761
 
 eureka:
+  instance:
+    # ✅ Docker ortamında hostname olarak service adını kullan
+    hostname: eureka-server
+    # ✅ Docker için prefer-ip-address false olmalı
+    prefer-ip-address: false
+    # ✅ Health check endpoint'i
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
+  
   client:
-    registerWithEureka: false
-    fetchRegistry: false
+    # ✅ Standalone Eureka server - kendini register etmemeli
+    register-with-eureka: false
+    fetch-registry: false
+    # ✅ Docker ortamında service URL düzeltmesi
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  
+  server:
+    # ✅ Geliştirme için self-preservation kapalı
+    enable-self-preservation: false
+    # ✅ Registry temizleme aralığı
+    eviction-interval-timer-in-ms: 15000
+    # ✅ Response cache settings
+    response-cache-update-interval-ms: 5000
+    response-cache-auto-expiration-in-seconds: 180
+
+# ✅ Management endpoints (health check için gerekli)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ✅ Logging configuration
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO

@@ -1,0 +1,70 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        #  Analytics Service - versiyonlu ve versiyonsuz path destekli
+        - id: analytics-service
+          uri: ${ANALYTICS_SERVICE_URL:http://analytics-service:8085}
+          predicates:
+            - Path=/api/v1/analytics/**
+          filters:
+            - StripPrefix=0
+
+        - id: analytics-service-alt
+          uri: ${ANALYTICS_SERVICE_URL:http://analytics-service:8085}
+          predicates:
+            - Path=/api/analytics/**
+          filters:
+            - RewritePath=/api/analytics/(?<path>.*), /api/v1/analytics/${path}
+
+        #  User Management Service
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://user-management-service:8081}
+          predicates:
+            - Path=/api/users/**
+
+        #  Shipment Service
+        - id: shipment-service
+          uri: ${SHIPMENT_SERVICE_URL:http://shipment-service:8082}
+          predicates:
+            - Path=/api/shipments/**
+
+        #  Tracking Service
+        - id: tracking-service
+          uri: ${TRACKING_SERVICE_URL:http://tracking-service:8083}
+          predicates:
+            - Path=/api/track/**
+
+        # ✅ Notification Service
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://notification-service:8084}
+          predicates:
+            - Path=/api/notifications/**
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:3001"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    preferIpAddress: true
+    instanceId: ${spring.application.name}:${server.port}
+
+# Server Configuration
+server:
+  port: 8080

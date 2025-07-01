@@ -1,8 +1,7 @@
 spring:
   application:
-    name: user-management-service
-  config:
-    import: "configserver:${CONFIG_SERVER_URL:http://config-server:8888}"
+    name: analytics-service
+
   cloud:
     config:
       enabled: true
@@ -29,5 +28,5 @@ management:
 
 logging:
   level:
-    org.springframework.cloud.config: DEBUG
     com.cargotracking: DEBUG
+    root: INFO

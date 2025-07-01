@@ -96,8 +96,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authService.register(data);
       
       if (response.success && response.data) {
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
+        // Backend'den gelen register response'unda token yok, sadece message ve user var
+        // Kullanıcı kayıt olduktan sonra login sayfasına yönlendirilecek
+        console.log('✅ Registration successful:', response.data.message);
         return { success: true };
       } else {
         const errorMessage = response.error || 'Kayıt olurken bilinmeyen bir hata oluştu';

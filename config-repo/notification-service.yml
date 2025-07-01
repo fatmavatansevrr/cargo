@@ -1,0 +1,163 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URL:mongodb://mongodb:27017/notification_db}
+      auto-index-creation: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      max-poll-records: 100
+      max-poll-interval-ms: 300000
+      session-timeout-ms: 30000
+      heartbeat-interval-ms: 10000
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        connections.max.idle.ms: 540000
+        request.timeout.ms: 30000
+        retry.backoff.ms: 1000
+        metadata.max.age.ms: 5000
+    producer:
+      acks: all
+      retries: 3
+      batch-size: 16384
+      linger-ms: 5
+      buffer-memory: 33554432
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        connections.max.idle.ms: 540000
+        request.timeout.ms: 30000
+        retry.backoff.ms: 1000
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    test-connection: false
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: "*"
+            protocols: "TLSv1.2"
+        debug: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+    displayRequestDuration: true
+  show-actuator: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
+    kafka:
+      enabled: false
+    mongo:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+notification:
+  retry:
+    max-attempts: 3
+    initial-delay: 1000
+    multiplier: 2
+    max-delay: 10000
+  channels:
+    email:
+      enabled: true
+      from-address: ${NOTIFICATION_FROM_EMAIL:noreply@cargotracking.com}
+      from-name: ${NOTIFICATION_FROM_NAME:Cargo Tracking System}
+    sms:
+      enabled: false
+      provider: twilio
+      account-sid: ${SMS_ACCOUNT_SID:}
+      auth-token: ${SMS_AUTH_TOKEN:}
+      from-number: ${SMS_FROM_NUMBER:}
+    push:
+      enabled: false
+      server-key: ${FCM_SERVER_KEY:}
+    in-app:
+      enabled: true
+  templates:
+    default-language: en
+    cache-enabled: true
+    cache-ttl: 3600
+  scheduler:
+    retry-failed-notifications:
+      enabled: true
+      fixed-delay: 300000
+    cleanup-old-notifications:
+      enabled: true
+      cron: "0 0 2 * * ?"
+      retention-days: 30
+
+external:
+  services:
+    user-service:
+      url: ${USER_SERVICE_URL:http://user-management-service:8081}
+      timeout: 5000
+    shipment-service:
+      url: ${SHIPMENT_SERVICE_URL:http://shipment-service:8082}
+      timeout: 5000
+    tracking-service:
+      url: ${TRACKING_SERVICE_URL:http://tracking-service:8083}
+      timeout: 5000
+
+logging:
+  level:
+    com.cargotracking.notification_service: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.data.mongodb: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/notification-service.log
+    max-size: 10MB
+    max-history: 30

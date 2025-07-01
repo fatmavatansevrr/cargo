@@ -4,17 +4,69 @@ server:
 spring:
   application:
     name: config-server
+
+  profiles:
+    active: native
+
   cloud:
     config:
       server:
+        native:
+          # ✅ Mevcut path doğru
+          search-locations: file:///app/config-repo/
+        # ✅ Git fallback devre dışı (native kullanırken önerilir)
         git:
-          uri: file:///${user.dir}/../config-repo
-          searchPaths: .
+          clone-on-start: false
+        # ✅ Health indicator aktif
+        health:
+          enabled: true
+        # ✅ Default label
+        default-label: main
 
+# ✅ Management endpoints - güvenlik için sınırlandırılmış
+management:
+  endpoints:
+    web:
+      exposure:
+        # ✅ Sadece gerekli endpoint'ler (güvenlik için "*" yerine)
+        include: health,info,refresh,configprops,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    # ✅ Config refresh endpoint aktif
+    refresh:
+      enabled: true
+
+# ✅ Eureka ayarları doğru - Docker ortamında devre dışı
 eureka:
   client:
-    service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
-jwt:
-  secret: MySuperSecretKey
+# ✅ Logging configuration
+logging:
+  level:
+    org.springframework.cloud.config: INFO
+    org.springframework.boot.autoconfigure: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ✅ Security (isteğe bağlı - production için önemli)
+# spring:
+#   security:
+#     user:
+#       name: config-admin
+#       password: ${CONFIG_SERVER_PASSWORD:admin123}
+
+---
+# ✅ Docker profile (eğer farklı ortamlar için farklı ayarlar gerekirse)
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG

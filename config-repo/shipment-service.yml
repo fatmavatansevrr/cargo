@@ -1,0 +1,135 @@
+# config-repo/shipment-service.yml
+# Shipment Service için genel konfigürasyon
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shipment_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        spring:
+          json:
+            add:
+              type:
+                headers: false
+        enable:
+          idempotence: true
+    consumer:
+      group-id: shipment-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*"
+        isolation:
+          level: read_committed
+
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    hostname: ${HOSTNAME:localhost}
+
+jwt:
+  secret: ${JWT_SECRET:MySecretKeyForJWTSigningMustBeAtLeast256BitsLongForSecurityReasons123456789}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  info:
+    title: Shipment Service API
+    description: Kargo gönderi yönetimi servisi - Requirements FR-SM-001 to FR-SM-008
+    version: 1.0.0
+    contact:
+      name: Cargo Tracking Team
+      email: support@cargotracking.com
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,beans
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+  health:
+    diskspace:
+      enabled: true
+    db:
+      enabled: true
+
+info:
+  app:
+    name: Shipment Service
+    description: Kargo gönderi yönetimi servisi
+    version: 1.0.0
+    requirements: FR-SM-001,FR-SM-002,FR-SM-003,FR-SM-004,FR-SM-005,FR-SM-006,FR-SM-007,FR-SM-008
+    profiles: ${spring.profiles.active}
+
+logging:
+  level:
+    com.cargotracking.shipment_service: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.cloud.config: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

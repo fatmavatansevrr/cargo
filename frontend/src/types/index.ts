@@ -95,10 +95,12 @@ export interface LoginData {
 
 // Kayıt form verileri
 export interface RegisterData {
+  username: string;
   email: string;
   password: string;
   firstName: string;
   lastName: string;
   phone: string;
-  role: UserRole;
+  address?: string;
+  roles: string[]; // Backend'de Set<Role> bekliyor
 } 
