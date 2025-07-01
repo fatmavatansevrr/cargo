@@ -181,14 +181,21 @@ export const shipmentService = {
   }>> {
     try {
       const response = await api.get('/shipments/dashboard/stats');
+      
       return {
         success: true,
         data: response.data,
       };
     } catch (error: any) {
+      console.error('Dashboard stats API error:', {
+        message: error.message,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'İstatistikler alınırken hata oluştu',
+        error: error.response?.data?.message || error.message || 'İstatistikler alınırken hata oluştu',
       };
     }
   },

@@ -2,8 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
 import Header from './components/Header';
+import ProtectedRoute from './components/ProtectedRoute';
+import { Permission } from './utils/rolePermissions';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -29,8 +32,8 @@ const LoadingSpinner: React.FC = () => (
   </div>
 );
 
-// Protected Route component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Simple Protected Route component (sadece giriş kontrolü için)
+const SimpleProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -97,108 +100,127 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              }
-            />
-            
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <RegisterPage />
-                </PublicRoute>
-              }
-            />
-            
-            {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
+        <ToastProvider>
+          <Router>
+            <Routes>
+              {/* Public Routes */}
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                }
+              />
+              
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                }
+              />
+              
+              {/* Protected Routes with Role-based Access Control */}
+              
+              {/* Dashboard - Herkes erişebilir */}
+              <Route
+                path="/dashboard"
+                element={
+                  <SimpleProtectedRoute>
+                    <DashboardPage />
+                  </SimpleProtectedRoute>
+                }
+              />
 
-            {/* Gönderi sayfaları */}
-            <Route
-              path="/tracking"
-              element={
-                <ProtectedRoute>
-                  <TrackShipmentPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Gönderi Takibi - Herkes erişebilir */}
+              <Route
+                path="/tracking"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.TRACK_SHIPMENTS]}>
+                    <TrackShipmentPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/tracking/:trackingNumber"
-              element={
-                <ProtectedRoute>
-                  <TrackShipmentPage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/tracking/:trackingNumber"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.TRACK_SHIPMENTS]}>
+                    <TrackShipmentPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/shipments"
-              element={
-                <ProtectedRoute>
-                  <PlaceholderPage title="Gönderilerim" />
-                </ProtectedRoute>
-              }
-            />
+              {/* Gönderiler Listesi - Herkes erişebilir */}
+              <Route
+                path="/shipments"
+                element={
+                  <SimpleProtectedRoute>
+                    <PlaceholderPage title="Gönderilerim" />
+                  </SimpleProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/shipments/new"
-              element={
-                <ProtectedRoute>
-                  <CreateShipmentPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Yeni Gönderi Oluşturma - Sadece ADMIN ve SHIPPER */}
+              <Route
+                path="/shipments/new"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.CREATE_SHIPMENT]}>
+                    <CreateShipmentPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <NotificationsPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Bildirimler - Herkes kendi bildirimlerini görür */}
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.VIEW_NOTIFICATIONS]}>
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <ReportsPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Raporlar - Sadece ADMIN ve SHIPPER */}
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.VIEW_REPORTS]}>
+                    <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <PlaceholderPage title="Profil Ayarları" />
-                </ProtectedRoute>
-              }
-            />
+              {/* Kullanıcı Yönetimi - Sadece ADMIN (henüz sayfa yok) */}
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.MANAGE_USERS]}>
+                    <PlaceholderPage title="Kullanıcı Yönetimi" description="Admin paneli - kullanıcı yönetimi" />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Default redirect */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
-            {/* 404 Route */}  
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
+              {/* Profil - Herkes kendi profilini görür */}
+              <Route
+                path="/profile"
+                element={
+                  <SimpleProtectedRoute>
+                    <PlaceholderPage title="Profil Ayarları" />
+                  </SimpleProtectedRoute>
+                }
+              />
+
+              {/* Default redirect */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              
+              {/* 404 Route */}  
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Router>
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

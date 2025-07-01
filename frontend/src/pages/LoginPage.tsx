@@ -25,8 +25,7 @@ const LoginPage: React.FC = () => {
     try {
       console.log('🔄 Calling login function...');
       await login(data.email, data.password);
-      console.log('✅ Login successful, navigating to dashboard...');
-      navigate('/dashboard');
+      console.log('✅ Login successful! AuthContext will handle redirect...');
     } catch (err: any) {
       console.error('❌ Login error:', err);
       setError(err.message || 'Giriş yapılırken bir hata oluştu.');

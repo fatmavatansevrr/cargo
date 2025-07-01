@@ -15,8 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  * Shipment Service - Ana gönderi yönetim servisi
@@ -507,5 +511,80 @@ public class ShipmentService {
         dto.setPhone(address.getPhone());
         dto.setEmail(address.getEmail());
         return dto;
+    }
+    
+    /**
+     * Dashboard istatistikleri hesaplama
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDashboardStats() {
+        log.info("Dashboard istatistikleri hesaplanıyor");
+        
+        try {
+            // Tüm gönderileri al
+            List<Shipment> allShipments = shipmentRepository.findAll();
+            
+            // İstatistikleri hesapla
+            long totalShipments = allShipments.size();
+            long activeShipments = allShipments.stream()
+                .filter(s -> s.getStatus() == Shipment.ShipmentStatus.ACTIVE)
+                .count();
+            
+            long deliveredShipments = allShipments.stream()
+                .filter(s -> s.getStatus() == Shipment.ShipmentStatus.FINISHED)
+                .count();
+
+            
+            // Aylık büyüme oranını hesapla (basit bir simülasyon)
+            double monthlyGrowth = calculateMonthlyGrowth(allShipments);
+            
+            // Son 10 gönderiyi al
+            List<ShipmentResponse> recentShipments = allShipments.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(10)
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalShipments", totalShipments);
+            stats.put("activeShipments", activeShipments);
+            stats.put("deliveredShipments", deliveredShipments);
+            stats.put("monthlyGrowth", monthlyGrowth);
+            stats.put("recentShipments", recentShipments);
+            
+            log.info("Dashboard istatistikleri hesaplandı. Toplam gönderi: {}", totalShipments);
+            return stats;
+            
+        } catch (Exception e) {
+            log.error("Dashboard istatistikleri hesaplanırken hata: {}", e.getMessage(), e);
+            throw new RuntimeException("Dashboard istatistikleri hesaplanamadı: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Aylık büyüme oranını hesapla
+     */
+    private double calculateMonthlyGrowth(List<Shipment> allShipments) {
+        if (allShipments.isEmpty()) {
+            return 0.0;
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneMonthAgo = now.minusMonths(1);
+        LocalDateTime twoMonthsAgo = now.minusMonths(2);
+        
+        long currentMonthShipments = allShipments.stream()
+            .filter(s -> s.getCreatedAt().isAfter(oneMonthAgo))
+            .count();
+        
+        long previousMonthShipments = allShipments.stream()
+            .filter(s -> s.getCreatedAt().isAfter(twoMonthsAgo) && s.getCreatedAt().isBefore(oneMonthAgo))
+            .count();
+        
+        if (previousMonthShipments == 0) {
+            return currentMonthShipments > 0 ? 100.0 : 0.0;
+        }
+        
+        return ((double) (currentMonthShipments - previousMonthShipments) / previousMonthShipments) * 100.0;
     }
 }

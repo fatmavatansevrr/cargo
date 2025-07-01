@@ -17,7 +17,7 @@ public interface ShipmentAnalyticsRepository extends JpaRepository<ShipmentAnaly
 
     List<ShipmentAnalytics> findByCustomerId(String customerId);
 
-    @Query("SELECT sa FROM ShipmentAnalytics sa WHERE sa.timestamp BETWEEN ?1 AND ?2 OR (sa.timestamp IS NULL AND sa.statusTimestamp BETWEEN ?1 AND ?2)")
+    @Query("SELECT sa FROM ShipmentAnalytics sa WHERE sa.statusTimestamp BETWEEN ?1 AND ?2")
     List<ShipmentAnalytics> findByDateRange(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("SELECT AVG(sa.deliveryDelayHours) FROM ShipmentAnalytics sa WHERE sa.carrierId = ?1")

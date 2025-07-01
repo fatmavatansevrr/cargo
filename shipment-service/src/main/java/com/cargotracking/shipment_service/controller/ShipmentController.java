@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 // import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -256,4 +257,30 @@ public class ShipmentController {
         }
     }
     */
+
+    /**
+     * Dashboard istatistikleri getirme
+     */
+    @GetMapping("/dashboard/stats")
+    @Operation(summary = "Dashboard istatistikleri", description = "Dashboard için temel istatistikleri getirir")
+    @ApiResponse(responseCode = "200", description = "İstatistikler başarıyla getirildi")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        log.info("Dashboard istatistikleri istendi");
+        
+        try {
+            Map<String, Object> stats = shipmentService.getDashboardStats();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Dashboard istatistikleri alınırken hata: {}", e.getMessage());
+            // Hata durumunda fallback veriler
+            Map<String, Object> fallbackStats = Map.of(
+                "totalShipments", 0,
+                "activeShipments", 0,
+                "deliveredShipments", 0,
+                "monthlyGrowth", 0.0,
+                "recentShipments", List.of()
+            );
+            return ResponseEntity.ok(fallbackStats);
+        }
+    }
 }

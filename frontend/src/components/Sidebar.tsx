@@ -29,6 +29,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
+import { hasPermission, Permission } from '../utils/rolePermissions';
 
 interface SidebarProps {
   open: boolean;
@@ -39,7 +40,7 @@ interface MenuItem {
   text: string;
   icon: React.ReactNode;
   path: string;
-  roles?: UserRole[];
+  permission?: Permission;
   badge?: number;
 }
 
@@ -81,57 +82,48 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Menü öğeleri - role göre filtreleme
+  // Menü öğeleri - permission göre filtreleme
   const menuItems: MenuItem[] = [
     {
       text: 'Dashboard',
       icon: <DashboardIcon />,
       path: '/dashboard',
+      permission: undefined, // Dashboard herkes için erişilebilir
     },
     {
       text: 'Gönderi Takibi',
       icon: <SearchIcon />,
       path: '/tracking',
+      permission: Permission.TRACK_SHIPMENTS,
     },
     {
       text: 'Yeni Gönderi',
       icon: <AddIcon />,
-      path: '/shipments/create',
-      roles: [UserRole.SHIPPER, UserRole.ADMIN],
+      path: '/shipments/new',
+      permission: Permission.CREATE_SHIPMENT,
     },
     {
       text: 'Gönderilerim',
       icon: <ShippingIcon />,
       path: '/shipments',
-      roles: [UserRole.SHIPPER, UserRole.CARRIER, UserRole.ADMIN],
     },
     {
-      text: 'Atanmış Gönderiler',
-      icon: <AssignmentIcon />,
-      path: '/assigned-shipments',
-      roles: [UserRole.CARRIER],
-    },
-    {
-      text: 'Geçmiş',
-      icon: <HistoryIcon />,
-      path: '/history',
-    },
-    {
-      text: 'Analitik',
+      text: 'Raporlar',
       icon: <AnalyticsIcon />,
-      path: '/analytics',
-      roles: [UserRole.ADMIN, UserRole.SHIPPER],
+      path: '/reports',
+      permission: Permission.VIEW_REPORTS,
     },
     {
       text: 'Kullanıcı Yönetimi',
       icon: <PeopleIcon />,
-      path: '/users',
-      roles: [UserRole.ADMIN],
+      path: '/admin/users',
+      permission: Permission.MANAGE_USERS,
     },
     {
       text: 'Bildirimler',
       icon: <NotificationsIcon />,
       path: '/notifications',
+      permission: Permission.VIEW_NOTIFICATIONS,
       badge: 3,
     },
     {
@@ -139,16 +131,11 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       icon: <ProfileIcon />,
       path: '/profile',
     },
-    {
-      text: 'Ayarlar',
-      icon: <SettingsIcon />,
-      path: '/settings',
-    },
   ];
 
-  // Kullanıcı rolüne göre menü filtreleme
+  // Kullanıcı yetkilerine göre menü filtreleme
   const filteredMenuItems = menuItems.filter(item => 
-    !item.roles || item.roles.includes(user?.role || UserRole.CUSTOMER)
+    !item.permission || (user?.role && hasPermission(user.role, item.permission))
   );
 
   const handleItemClick = (path: string) => {

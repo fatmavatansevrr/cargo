@@ -1,20 +1,87 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, LoginData, RegisterData, ApiResponse } from '../types';
 import { authService } from '../services/authService';
+import { User, UserRole } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  updateUser: (user: User) => void;
-  clearError: () => void;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+// Role normalizasyon fonksiyonu
+const normalizeUserRole = (userData: any): UserRole | null => {
+  if (!userData) return null;
+  
+  // Eğer role field'ı varsa
+  if (userData.role && typeof userData.role === 'string') {
+    const role = userData.role.toLowerCase();
+    if (Object.values(UserRole).includes(role as UserRole)) {
+      return role as UserRole;
+    }
+  }
+  
+  // Eğer roles array'i varsa
+  if (userData.roles && Array.isArray(userData.roles) && userData.roles.length > 0) {
+    const role = userData.roles[0].toLowerCase();
+    if (Object.values(UserRole).includes(role as UserRole)) {
+      return role as UserRole;
+    }
+  }
+  
+  // Eğer authorities field'ı varsa (Spring Security format)
+  if (userData.authorities && Array.isArray(userData.authorities) && userData.authorities.length > 0) {
+    const authority = userData.authorities[0];
+    let roleString = '';
+    
+    if (typeof authority === 'string') {
+      roleString = authority.replace('ROLE_', '');
+    } else if (authority.authority) {
+      roleString = authority.authority.replace('ROLE_', '');
+    }
+    
+    const role = roleString.toLowerCase();
+    if (Object.values(UserRole).includes(role as UserRole)) {
+      return role as UserRole;
+    }
+  }
+  
+  return null;
+};
+
+// User object normalizasyon fonksiyonu
+const normalizeUser = (userData: any): User | null => {
+  if (!userData) return null;
+  
+  const normalizedRole = normalizeUserRole(userData);
+  if (!normalizedRole) {
+    console.warn('Kullanıcının geçerli bir rolü yok. Role:', userData.roles || userData.role);
+    return null;
+  }
+  
+  return {
+    id: userData.id || userData.userId || '',
+    email: userData.email || userData.username || '',
+    firstName: userData.firstName || userData.name || userData.fullName || 'Kullanıcı',
+    lastName: userData.lastName || '',
+    phone: userData.phone || userData.phoneNumber || '',
+    role: normalizedRole,
+    roles: userData.roles || (normalizedRole ? [normalizedRole] : []),
+    createdAt: userData.createdAt || userData.createDate || new Date().toISOString(),
+    updatedAt: userData.updatedAt || userData.updateDate || new Date().toISOString()
+  };
+};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -23,93 +90,62 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Sayfa yenilendiğinde token kontrolü
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      (async () => {
-        try {
-          console.log('Checking stored token...');
-          const response = await authService.getCurrentUser();
-          if (response.success && response.data) {
-            setUser(response.data);
-            setIsAuthenticated(true);
-          } else {
-            // Token geçersiz, temizle
-            localStorage.removeItem('token');
-          }
-        } catch (error) {
-          console.error('Token validation failed:', error);
-          localStorage.removeItem('token');
-        } finally {
-          setIsLoading(false);
-        }
-      })();
-    } else {
-      setIsLoading(false);
-    }
+    checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    console.log('🔧 AuthContext login called with:', { email, password: '***' });
-    setIsLoading(true);
-    setError(null);
-
+  const checkAuthStatus = async () => {
     try {
-      console.log('📡 Making API call to authService.login...');
-      const response = await authService.login({ email, password });
-      console.log('📡 API Response received:', response);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Token'ı validate etmek için getCurrentUser kullan
+      const response = await authService.getCurrentUser();
       
       if (response.success && response.data) {
-        console.log('✅ Login API successful, setting user data:', response.data);
-        setUser(response.data.user);
-        setIsAuthenticated(true);
-        
-        // Store token in localStorage if available
-        if (response.data.token) {
-          console.log('💾 Storing token in localStorage');
-          localStorage.setItem('token', response.data.token);
-        }
+        const normalizedUser = normalizeUser(response.data);
+        setUser(normalizedUser);
       } else {
-        console.log('❌ Login API failed:', response.error);
-        throw new Error(response.error || 'Giriş yapılamadı');
+        // Token geçersiz, temizle
+        localStorage.removeItem('token');
+        setUser(null);
       }
-    } catch (err: any) {
-      console.error('💥 AuthContext login error:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Giriş yapılırken hata oluştu';
-      console.error('💥 Error message:', errorMessage);
-      setError(errorMessage);
-      throw err;
+    } catch (error) {
+      console.error('Auth status check failed:', error);
+      localStorage.removeItem('token');
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      setError(null);
-      
-      const response = await authService.register(data);
+      const response = await authService.login({ email, password });
       
       if (response.success && response.data) {
-        // Backend'den gelen register response'unda token yok, sadece message ve user var
-        // Kullanıcı kayıt olduktan sonra login sayfasına yönlendirilecek
-        console.log('✅ Registration successful:', response.data.message);
-        return { success: true };
+        // Token'ı kaydet
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
+        
+        // User bilgilerini normalize et
+        const normalizedUser = normalizeUser(response.data.user || response.data);
+        setUser(normalizedUser);
+        
+        return true;
       } else {
-        const errorMessage = response.error || 'Kayıt olurken bilinmeyen bir hata oluştu';
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        console.error('Login failed:', response.error);
+        return false;
       }
-    } catch (error: any) {
-      console.error('Register error in context:', error);
-      const errorMessage = error.message || 'Kayıt olurken hata oluştu';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -118,41 +154,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
-    setError(null);
-    setIsAuthenticated(false);
   };
 
-  const updateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-  };
-
-  const clearError = () => {
-    setError(null);
-  };
-
-  const value = {
-    user,
-    isLoading,
-    isAuthenticated,
-    error,
-    login,
-    register,
-    logout,
-    updateUser,
-    clearError,
-  };
+  const isAuthenticated = !!user && !!localStorage.getItem('token');
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      isAuthenticated,
+      isLoading
+    }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }; 

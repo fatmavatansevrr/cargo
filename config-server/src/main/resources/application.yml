@@ -14,9 +14,6 @@ spring:
         native:
           # ✅ Mevcut path doğru
           search-locations: file:///app/config-repo/
-        # ✅ Git fallback devre dışı (native kullanırken önerilir)
-        git:
-          clone-on-start: false
         # ✅ Health indicator aktif
         health:
           enabled: true

@@ -26,6 +26,7 @@ export interface User {
   lastName: string;
   phone: string;
   role: UserRole;
+  roles?: string[]; // Backend'den gelen roles array'i
   createdAt: string;
   updatedAt: string;
 }
