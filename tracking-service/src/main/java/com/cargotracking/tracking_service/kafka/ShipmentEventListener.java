@@ -5,7 +5,6 @@ import com.cargotracking.tracking_service.model.TrackingState;
 import com.cargotracking.tracking_service.service.TrackingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ShipmentEventListener {
 
-    private static final Logger log = LoggerFactory.getLogger(ShipmentEventListener.class);
     private final TrackingService trackingService;
 
     @KafkaListener(topics = "shipment-events", groupId = "tracking-group")
@@ -23,20 +21,23 @@ public class ShipmentEventListener {
         log.info("📦 Kafka olayı alındı: {} - Tracking: {} - Status: {}",
                 event.getEventType(), event.getTrackingNumber(), event.getStatus());
 
+        String location = "İşlem Merkezi"; // Adres bilgisi event'te olmadığından varsayılan değer
+        String updatedBy = "system"; // Event'ler sistem tarafından işlendiği için
+
         try {
             if ("shipment.created".equalsIgnoreCase(event.getEventType())) {
                 log.info("🆕 Yeni gönderi takip kaydı oluşturuluyor: {}", event.getTrackingNumber());
-                trackingService.updateStatus(event.getTrackingNumber(), TrackingState.CREATED);
+                trackingService.updateStatus(event.getTrackingNumber(), TrackingState.CREATED, location, updatedBy);
             } else if ("shipment.updated".equalsIgnoreCase(event.getEventType())) {
                 log.info("🔄 Gönderi durumu güncelleniyor: {} -> {}", event.getTrackingNumber(), event.getStatus());
                 TrackingState newState = mapStatusToTrackingState(event.getStatus());
-                trackingService.updateStatus(event.getTrackingNumber(), newState);
+                trackingService.updateStatus(event.getTrackingNumber(), newState, location, updatedBy);
             } else if ("shipment.canceled".equalsIgnoreCase(event.getEventType())) {
                 log.info("❌ Gönderi iptal edildi: {}", event.getTrackingNumber());
-                trackingService.updateStatus(event.getTrackingNumber(), TrackingState.CANCELLED);
+                trackingService.updateStatus(event.getTrackingNumber(), TrackingState.CANCELLED, location, updatedBy);
             } else if ("shipment.finished".equalsIgnoreCase(event.getEventType())) {
                 log.info("✅ Gönderi tamamlandı: {}", event.getTrackingNumber());
-                trackingService.updateStatus(event.getTrackingNumber(), TrackingState.DELIVERED);
+                trackingService.updateStatus(event.getTrackingNumber(), TrackingState.DELIVERED, "Teslimat Adresi", updatedBy);
             } else {
                 log.warn("⚠️ Bilinmeyen olay türü: {}", event.getEventType());
             }

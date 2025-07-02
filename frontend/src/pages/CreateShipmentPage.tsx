@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserRole } from '../types';
+import { UserRole, ShipmentCompany } from '../types';
+import { shipmentService } from '../services/shipmentService';
 import Header from '../components/Header';
 // Backend DTO'larına uygun TypeScript interface'leri
 interface AddressDto {
@@ -17,6 +18,7 @@ interface AddressDto {
 }
 
 interface PackageDto {
+
     weight: number;
       length: number;
       width: number;
@@ -41,6 +43,7 @@ interface CreateShipmentRequest {
   specialInstructions?: string;
   notes?: string;
   deliveryPreferences?: DeliveryPreferencesDto;
+  shipmentCompanyId?: number; // Kargo şirketi seçimi için
 }
 
 const CreateShipmentPage: React.FC = () => {
@@ -48,6 +51,8 @@ const CreateShipmentPage: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shipmentCompanies, setShipmentCompanies] = useState<ShipmentCompany[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
   
   // Form state - Başlangıç değerleri ile
   const [formData, setFormData] = useState<CreateShipmentRequest>({
@@ -93,6 +98,28 @@ const CreateShipmentPage: React.FC = () => {
     },
   });
 
+  // Kargo şirketlerini yükle
+  useEffect(() => {
+    const loadShipmentCompanies = async () => {
+      try {
+        console.log('🔄 Kargo şirketleri yükleniyor...');
+        const response = await shipmentService.getShipmentCompanies();
+        if (response.success && response.data) {
+          setShipmentCompanies(response.data);
+          console.log('✅ Kargo şirketleri başarıyla yüklendi:', response.data);
+        } else {
+          console.error('❌ Kargo şirketleri yüklenirken bilinen bir hata oluştu:', response.error);
+          setError(response.error || 'Kargo şirketleri yüklenemedi.');
+        }
+      } catch (error) {
+        console.error('❌ Kargo şirketleri yüklenirken beklenmedik bir hata oluştu:', error);
+        setError('Kargo şirketleri yüklenirken bir hata oluştu.');
+      }
+    };
+
+    loadShipmentCompanies();
+  }, []);
+
   // Generic input handler - Path ile nested object güncelleme
   const handleInputChange = (path: string, value: any) => {
     setFormData(prev => {
@@ -116,19 +143,40 @@ const CreateShipmentPage: React.FC = () => {
     setLoading(true);
     setError(null);
     
+    // Kargo şirketi seçimi zorunlu
+    if (!selectedCompanyId) {
+      setError('Lütfen bir kargo şirketi seçin');
+      setLoading(false);
+      return;
+    }
+    
+    // Form data'ya kargo şirketi ID'sini ekle ve yapıyı düzelt
+    const requestData = {
+      ...formData,
+      shipmentCompanyId: selectedCompanyId,
+      recipientEmail: formData.recipientAddress.email,
+      recipientPhone: formData.recipientAddress.phone,
+    };
+    
     console.log('📤 Gönderi oluşturma isteği gönderiliyor:', {
       url: 'http://localhost:8080/api/shipments',
       method: 'POST',
-      data: formData
+      data: requestData
     });
     
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+      
       const response = await fetch('http://localhost:8080/api/shipments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
       });
       
       console.log('📥 Response alındı:', {
@@ -178,14 +226,14 @@ const CreateShipmentPage: React.FC = () => {
                   <div className="bg-blue-600 px-6 py-4">
                     <h1 className="text-2xl font-bold text-white">Yeni Gönderi Oluştur</h1>
                     <p className="text-blue-100 mt-1">Kargo gönderinizi detaylarıyla birlikte oluşturun</p>
-                    {user?.role === 'admin' && (
+                    {user?.role === UserRole.SHIPMENT_COMPANY && (
                       <div className="mt-2 text-yellow-200 text-sm">
-                        🔧 Admin olarak tüm gönderi türlerini oluşturabilirsiniz
+                        🏢 Kargo şirketi olarak tüm gönderi türlerini oluşturabilirsiniz
                       </div>
                     )}
-                    {user?.role === 'shipper' && (
+                    {user?.role === UserRole.CUSTOMER && (
                       <div className="mt-2 text-green-200 text-sm">
-                        📦 Gönderici olarak kargo gönderisi oluşturabilirsiniz
+                        📦 Müşteri olarak kargo gönderisi oluşturabilirsiniz
                       </div>
                     )}
                   </div>
@@ -196,6 +244,37 @@ const CreateShipmentPage: React.FC = () => {
                           <p className="text-red-800">{error}</p>
                         </div>
                     )}
+
+                    {/* Kargo Şirketi Seçimi */}
+                    <div className="bg-indigo-50 rounded-lg p-6 border border-indigo-200">
+                      <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        🏢 Kargo Şirketi Seçimi <span className="text-red-500 ml-1">*</span>
+                      </h2>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Gönderiyi teslim alacak kargo şirketi
+                          </label>
+                          <select
+                            value={selectedCompanyId || ''}
+                            onChange={(e) => setSelectedCompanyId(Number(e.target.value) || null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                            required
+                          >
+                            <option value="">Kargo şirketi seçin...</option>
+                            {shipmentCompanies.map((company) => (
+                              <option key={company.id} value={company.id}>
+                                {company.firstName} {company.lastName} - {company.email}
+                                {company.phone && ` - ${company.phone}`}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Seçtiğiniz kargo şirketi, gönderinizi otomatik olarak uygun bir taşıyıcıya atayacaktır.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Gönderici Bilgileri */}
                     <div className="bg-gray-50 rounded-lg p-6">

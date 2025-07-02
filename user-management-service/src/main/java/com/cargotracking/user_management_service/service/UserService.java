@@ -7,6 +7,7 @@ import com.cargotracking.user_management_service.model.Role;
 import com.cargotracking.user_management_service.model.User;
 import com.cargotracking.user_management_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -50,6 +52,7 @@ public class UserService {
                 .phone(request.getPhone())
                 .address(request.getAddress())
                 .roles(request.getRoles())
+                .companyId(request.getCompanyId())
                 .isActive(true)
                 .build();
 
@@ -208,6 +211,34 @@ public class UserService {
     }
 
     /**
+     * Belirli bir kargo şirketine bağlı carrier'ları getirir
+     * Otomatik gönderi atama için kullanılır
+     */
+    public List<User> getCarriersByCompanyId(Long companyId) {
+        log.info("Kargo şirketinin carrier'ları getiriliyor. Company ID: {}", companyId);
+        
+        return userRepository.findByCompanyIdAndRolesContainingAndIsActiveTrue(
+            companyId, 
+            Role.CARRIER
+        );
+    }
+
+    /**
+     * Tüm aktif kargo şirketlerini getirir
+     * Shipment oluşturma sırasında dropdown için kullanılır
+     */
+    public List<User> getShipmentCompanies() {
+        log.info("Tüm kargo şirketleri getiriliyor");
+        
+        return userRepository.findByRolesContainingAndIsActiveTrue(Role.SHIPMENT_COMPANY);
+    }
+
+    public List<User> getCarriersByCompany(Long companyId) {
+        log.info("{} ID'li şirkete ait carrier'lar getiriliyor", companyId);
+        return userRepository.findByCompanyIdAndRolesContaining(companyId, Role.CARRIER);
+    }
+
+    /**
      * Entity'den DTO'ya mapping
      */
     private UserResponse mapToUserResponse(User user) {
@@ -220,6 +251,7 @@ public class UserService {
                 .phone(user.getPhone())
                 .address(user.getAddress())
                 .roles(user.getRoles())
+                .companyId(user.getCompanyId())
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

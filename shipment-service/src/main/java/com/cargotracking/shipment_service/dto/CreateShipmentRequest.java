@@ -28,12 +28,22 @@ public class CreateShipmentRequest {
     @NotNull(message = "Alıcı adresi boş olamaz")
     private AddressDto recipientAddress;
     
+    // Alıcı iletişim bilgileri - takip numarası gönderimi için
+    @NotNull(message = "Alıcı e-posta adresi boş olamaz")
+    private String recipientEmail;
+    
+    @NotNull(message = "Alıcı telefon numarası boş olamaz")
+    private String recipientPhone;
+    
     @Valid
     @NotNull(message = "Paket bilgileri boş olamaz")
     private PackageDto packageInfo;
     
     @NotNull(message = "Hizmet tipi boş olamaz")
     private Shipment.ServiceType serviceType;
+    
+    @NotNull(message = "Kargo şirketi seçimi boş olamaz")
+    private Long shipmentCompanyId;
     
     @Size(max = 1000, message = "Özel talimatlar 1000 karakterden uzun olamaz")
     private String specialInstructions;

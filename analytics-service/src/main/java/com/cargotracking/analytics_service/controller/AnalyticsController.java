@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class AnalyticsController {
     private final AnalyticsMapper analyticsMapper;
 
     @GetMapping
+    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
     @Operation(summary = "Get all analytics data", description = "Retrieves all analytics data")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Analytics data retrieved successfully")
@@ -116,6 +118,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/carrier/{carrierId}/performance")
+    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
     @Operation(summary = "Get carrier performance metrics", description = "Retrieves detailed performance metrics for a specific carrier")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Performance metrics retrieved successfully",
@@ -132,6 +135,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/status-distribution")
+    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
     @Operation(summary = "Get shipment status distribution", description = "Retrieves the distribution of shipment statuses across all shipments")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Status distribution retrieved successfully",

@@ -29,7 +29,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
-import { hasPermission, Permission } from '../utils/rolePermissions';
+import { hasPermission, Permission, getUserPermissions } from '../utils/rolePermissions';
 
 interface SidebarProps {
   open: boolean;
@@ -47,14 +47,12 @@ interface MenuItem {
 // Helper functions for user role
 function getRoleColor(role: UserRole): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" {
   switch (role) {
-    case UserRole.ADMIN:
-      return 'error';
+    case UserRole.SHIPMENT_COMPANY:
+      return 'error'; // Şirket admini için kırmızı
     case UserRole.CARRIER:
-      return 'warning';
-    case UserRole.SHIPPER:
-      return 'primary';
+      return 'warning'; // Taşıyıcı için turuncu
     case UserRole.CUSTOMER:
-      return 'secondary';
+      return 'primary'; // Müşteri için mavi
     default:
       return 'default';
   }
@@ -62,14 +60,12 @@ function getRoleColor(role: UserRole): "default" | "primary" | "secondary" | "er
 
 function getRoleText(role: UserRole): string {
   switch (role) {
-    case UserRole.ADMIN:
-      return 'Admin';
+    case UserRole.SHIPMENT_COMPANY:
+      return 'Kargo Şirketi'; // Kargo şirket yöneticisi
     case UserRole.CARRIER:
-      return 'Taşıyıcı';
-    case UserRole.SHIPPER:
-      return 'Gönderici';
+      return 'Taşıyıcı'; // Kargo taşıyıcısı
     case UserRole.CUSTOMER:
-      return 'Müşteri';
+      return 'Müşteri'; // Gönderici/Alıcı müşteri
     default:
       return 'Kullanıcı';
   }
@@ -81,6 +77,16 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // DEBUGGING - Kullanıcı verisini detaylı logla
+  React.useEffect(() => {
+    console.log('🐛 SIDEBAR DEBUG - User object changed:', user);
+    console.log('🐛 SIDEBAR DEBUG - User type:', typeof user);
+    console.log('🐛 SIDEBAR DEBUG - User role:', user?.role);
+    console.log('🐛 SIDEBAR DEBUG - User role type:', typeof user?.role);
+    console.log('🐛 SIDEBAR DEBUG - Available UserRole enum:', Object.values(UserRole));
+    console.log('🐛 SIDEBAR DEBUG - getUserPermissions result:', getUserPermissions(user?.role));
+  }, [user]);
 
   // Menü öğeleri - permission göre filtreleme
   const menuItems: MenuItem[] = [
@@ -88,7 +94,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       text: 'Dashboard',
       icon: <DashboardIcon />,
       path: '/dashboard',
-      permission: undefined, // Dashboard herkes için erişilebilir
     },
     {
       text: 'Gönderi Takibi',
@@ -106,6 +111,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       text: 'Gönderilerim',
       icon: <ShippingIcon />,
       path: '/shipments',
+    },
+    {
+      text: 'Kargo Durum Güncelleme',
+      icon: <AssignmentIcon />,
+      path: '/carrier/tracking',
+      permission: Permission.CARRIER_TRACKING_MANAGEMENT,
     },
     {
       text: 'Raporlar',
@@ -133,10 +144,29 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
     },
   ];
 
-  // Kullanıcı yetkilerine göre menü filtreleme
-  const filteredMenuItems = menuItems.filter(item => 
-    !item.permission || (user?.role && hasPermission(user.role, item.permission))
-  );
+  // Menü öğelerini doğrudan kullanıcı rolüne göre filtrele
+  const filteredMenuItems = React.useMemo(() => {
+    console.log('🔄 Sidebar yeniden hesaplanıyor. User:', user);
+    if (!user || !user.role) {
+      // Kullanıcı yoksa veya rolü yoksa, sadece herkese açık öğeleri göster
+      return menuItems.filter(item => !item.permission);
+    }
+
+    console.log(`👤 Kullanıcı Rolü: ${user.role}`);
+    const userPermissions = getUserPermissions(user.role);
+    console.log('🔐 Kullanıcı İzinleri:', userPermissions);
+
+    return menuItems.filter(item => {
+      // İzin gerekmiyorsa göster
+      if (!item.permission) {
+        return true;
+      }
+      // Kullanıcının izni varsa göster
+      const hasAccess = userPermissions.includes(item.permission);
+      console.log(`- Menü: ${item.text}, İzin: ${item.permission}, Erişim: ${hasAccess}`);
+      return hasAccess;
+    });
+  }, [user]); // Sadece 'user' nesnesi değiştiğinde yeniden hesapla
 
   const handleItemClick = (path: string) => {
     navigate(path);

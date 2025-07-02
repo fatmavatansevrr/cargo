@@ -46,6 +46,7 @@ public class SecurityConfig {
                 // Public endpoint'ler - Authentication gerektirmeyen
                 .requestMatchers(
                     "/api/auth/**",           // Authentication endpoint'leri
+                    "/api/admin/internal/**", // Internal microservice endpoint'leri
                     "/v3/api-docs/**",        // OpenAPI docs
                     "/v3/api-docs",           // OpenAPI docs (without trailing slash)
                     "/swagger-ui/**",         // Swagger UI
@@ -60,8 +61,8 @@ public class SecurityConfig {
                     "/health"                 // Health check endpoint
                 ).permitAll()
                 
-                // Admin endpoint'leri - Sadece ADMIN rolü
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Shipment Company endpoint'leri - Sadece SHIPMENT_COMPANY rolü
+                .requestMatchers("/api/shipment-company/**").hasRole("SHIPMENT_COMPANY")
                 
                 // Diğer tüm endpoint'ler authentication gerektirir
                 .anyRequest().authenticated()

@@ -8,7 +8,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URL:mongodb://mongodb:27017/notification_db}
-      auto-index-creation: true
+      auto-index-creation: false
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
@@ -46,16 +46,17 @@ spring:
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     test-connection: false
+    default-encoding: UTF-8
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:true}
           starttls:
-            enable: true
+            enable: ${MAIL_STARTTLS_ENABLE:true}
           ssl:
-            trust: "*"
+            trust: ${MAIL_SSL_TRUST:*}
             protocols: "TLSv1.2"
-        debug: false
+        debug: ${MAIL_DEBUG:false}
 
 springdoc:
   api-docs:

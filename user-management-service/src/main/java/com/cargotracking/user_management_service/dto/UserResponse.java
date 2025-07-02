@@ -22,6 +22,7 @@ public class UserResponse {
     private String phone;
     private String address;
     private Set<Role> roles;
+    private Long companyId;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -1,10 +1,12 @@
 package com.cargotracking.user_management_service.repository;
 
+import com.cargotracking.user_management_service.model.Role;
 import com.cargotracking.user_management_service.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -24,4 +26,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     
     Optional<User> findByResetToken(String resetToken);
+    
+    /**
+     * Belirli bir kargo şirketine bağlı carrier'ları getirir
+     */
+    List<User> findByCompanyIdAndRolesContainingAndIsActiveTrue(Long companyId, Role role);
+    
+    /**
+     * Belirli role sahip aktif kullanıcıları getirir (örn: SHIPMENT_COMPANY)
+     */
+    List<User> findByRolesContainingAndIsActiveTrue(Role role);
+
+    List<User> findByCompanyIdAndRolesContaining(Long companyId, Role role);
 }

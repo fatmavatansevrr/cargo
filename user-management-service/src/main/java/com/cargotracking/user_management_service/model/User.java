@@ -45,6 +45,11 @@ public class User {
     @Column(name = "role")
     private Set<Role> roles;
 
+    // Kargo şirketi ile carrier arasındaki ilişki için
+    // CARRIER rolündeki kullanıcılar için hangi şirkete bağlı olduklarını belirtir
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;

@@ -21,7 +21,11 @@ spring:
         - id: user-service
           uri: ${USER_SERVICE_URL:http://user-management-service:8081}
           predicates:
-            - Path=/api/users/**
+            - Path=/api/users/**, /api/auth/**, /api/admin/**
+        - id: company-service
+          uri: ${USER_SERVICE_URL:http://user-management-service:8081}
+          predicates:
+            - Path=/api/companies/**
 
         #  Shipment Service
         - id: shipment-service
@@ -33,7 +37,7 @@ spring:
         - id: tracking-service
           uri: ${TRACKING_SERVICE_URL:http://tracking-service:8083}
           predicates:
-            - Path=/api/track/**
+            - Path=/api/tracking/**
 
         # ✅ Notification Service
         - id: notification-service
@@ -51,6 +55,7 @@ spring:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
               - OPTIONS
             allowedHeaders: "*"

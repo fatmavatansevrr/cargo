@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+interface HeaderProps {
+  onSidebarToggle?: () => void;
+}
+
 // Icons as SVG components for better performance
 const SearchIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +38,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const Header: React.FC = () => {
+const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -135,6 +139,14 @@ const Header: React.FC = () => {
               <SearchIcon />
             </button>
 
+            {/* Sidebar Toggle Button */}
+            <button 
+              onClick={onSidebarToggle}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors duration-200"
+            >
+              <MenuIcon />
+            </button>
+
             {/* Notifications */}
             <div className="relative">
               <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors duration-200 relative">
@@ -151,7 +163,6 @@ const Header: React.FC = () => {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-50 transition-colors duration-200 border border-gray-200 hover:border-gray-300"
               >
-                <MenuIcon />
                 <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                   <UserIcon />
                 </div>

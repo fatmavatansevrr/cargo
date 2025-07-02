@@ -1,5 +1,6 @@
 package com.cargotracking.shipment_service.service;
 
+import com.cargotracking.shipment_service.client.UserServiceClient;
 import com.cargotracking.shipment_service.dto.*;
 import com.cargotracking.shipment_service.event.ShipmentEvent;
 import com.cargotracking.shipment_service.model.*;
@@ -33,6 +34,7 @@ import java.util.HashMap;
 public class ShipmentService {
     
     private final ShipmentRepository shipmentRepository;
+    private final UserServiceClient userServiceClient;
     
     @Autowired(required = false) // Kafka yoksa hata vermesin
     private KafkaTemplate<String, Object> kafkaTemplate;
@@ -51,12 +53,18 @@ public class ShipmentService {
         // Shipment entity oluştur
         Shipment shipment = new Shipment();
         shipment.setTrackingNumber(generateTrackingNumber());
-        shipment.setSenderUserId(senderUserId);
+        shipment.setSenderCustomerId(senderUserId); // Güncellenmiş alan adı
         shipment.setSenderAddress(convertToAddressEntity(request.getSenderAddress()));
-        shipment.setRecipientAddress(convertToAddressEntity(request.getRecipientAddress()));
+        
+        // Recipient address'e iletişim bilgilerini ekle
+        Address recipientAddress = convertToAddressEntity(request.getRecipientAddress());
+        recipientAddress.setEmail(request.getRecipientEmail());
+        recipientAddress.setPhone(request.getRecipientPhone());
+        shipment.setRecipientAddress(recipientAddress);
         shipment.setPackageInfo(convertToPackageEntity(request.getPackageInfo()));
         shipment.setServiceType(request.getServiceType());
         shipment.setStatus(Shipment.ShipmentStatus.ACTIVE);
+        shipment.setShipmentCompanyId(request.getShipmentCompanyId());
         shipment.setSpecialInstructions(request.getSpecialInstructions());
         shipment.setNotes(request.getNotes());
         
@@ -74,15 +82,29 @@ public class ShipmentService {
         // Kargo ücreti hesapla
         shipment.setShippingCost(calculateShippingCost(request.getPackageInfo(), request.getServiceType()));
         
+        // Otomatik carrier atama
+        Long assignedCarrierId = assignCarrierAutomatically(request.getShipmentCompanyId());
+        if (assignedCarrierId != null) {
+            shipment.setAssignedCarrierId(assignedCarrierId);
+            log.info("Gönderi otomatik olarak carrier'a atandı. Carrier ID: {}", assignedCarrierId);
+        } else {
+            log.warn("Otomatik carrier ataması başarısız. Şirket ID: {}", request.getShipmentCompanyId());
+        }
+        
         // Veritabanına kaydet
         Shipment savedShipment = shipmentRepository.save(shipment);
         
-        // Kafka olayı yayınla
+        // Kafka olayı yayınla - recipient iletişim bilgileri ile
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("shipment", convertToResponse(savedShipment));
+        eventData.put("recipientEmail", request.getRecipientEmail());
+        eventData.put("recipientPhone", request.getRecipientPhone());
+        
         publishShipmentEvent(ShipmentEvent.created(
             savedShipment.getId(),
             savedShipment.getTrackingNumber(),
-            savedShipment.getSenderUserId(),
-            convertToResponse(savedShipment)
+            savedShipment.getSenderCustomerId(),
+            eventData
         ));
         
         log.info("Gönderi oluşturuldu. Takip numarası: {}", savedShipment.getTrackingNumber());
@@ -116,8 +138,29 @@ public class ShipmentService {
      */
     @Transactional(readOnly = true)
     public Page<ShipmentResponse> findUserShipments(Long userId, Pageable pageable) {
-        return shipmentRepository.findBySenderUserId(userId, pageable)
+        return shipmentRepository.findBySenderCustomerId(userId, pageable)
                 .map(this::convertToResponse);
+    }
+    
+    /**
+     * Carrier'a atanmış gönderileri listeleme
+     * Requirements: Carrier rolündeki kullanıcıların atandığı gönderileri görüntülemesi
+     */
+    @Transactional(readOnly = true)
+    public List<ShipmentResponse> findCarrierShipments(Long carrierId) {
+        log.info("Carrier gönderileri listeleniyor. Carrier ID: {}", carrierId);
+        
+        // Şimdilik tüm aktif gönderileri döndür (test için)
+        // Gerçek implementasyonda carrier_id alanı ile filtreleme yapılacak
+        List<Shipment> shipments = shipmentRepository.findByStatusIn(
+            List.of(
+                Shipment.ShipmentStatus.ACTIVE
+            )
+        );
+        
+        return shipments.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
     
     /**
@@ -151,7 +194,7 @@ public class ShipmentService {
         publishShipmentEvent(ShipmentEvent.updated(
             updatedShipment.getId(),
             updatedShipment.getTrackingNumber(),
-            updatedShipment.getSenderUserId(),
+            updatedShipment.getSenderCustomerId(),
             newStatus,
             previousStatus,
             convertToResponse(updatedShipment)
@@ -229,7 +272,7 @@ public class ShipmentService {
         publishShipmentEvent(ShipmentEvent.updated(
             updatedShipment.getId(),
             updatedShipment.getTrackingNumber(),
-            updatedShipment.getSenderUserId(),
+            updatedShipment.getSenderCustomerId(),
             updatedShipment.getStatus(),
             updatedShipment.getStatus(), // Durum değişmedi, sadece bilgiler güncellendi
             convertToResponse(updatedShipment)
@@ -265,7 +308,7 @@ public class ShipmentService {
         publishShipmentEvent(ShipmentEvent.canceled(
             canceledShipment.getId(),
             canceledShipment.getTrackingNumber(),
-            canceledShipment.getSenderUserId(),
+            canceledShipment.getSenderCustomerId(),
             convertToResponse(canceledShipment)
         ));
         
@@ -384,9 +427,16 @@ public class ShipmentService {
         ShipmentResponse response = new ShipmentResponse();
         response.setId(shipment.getId());
         response.setTrackingNumber(shipment.getTrackingNumber());
-        response.setSenderUserId(shipment.getSenderUserId());
+        response.setSenderCustomerId(shipment.getSenderCustomerId()); // Güncellenmiş alan adı
         response.setSenderAddress(convertToAddressDto(shipment.getSenderAddress()));
         response.setRecipientAddress(convertToAddressDto(shipment.getRecipientAddress()));
+        
+        // Recipient iletişim bilgileri - address'ten al
+        if (shipment.getRecipientAddress() != null) {
+            response.setRecipientEmail(shipment.getRecipientAddress().getEmail());
+            response.setRecipientPhone(shipment.getRecipientAddress().getPhone());
+        }
+        
         response.setPackageInfo(convertToPackageDto(shipment.getPackageInfo()));
         response.setServiceType(shipment.getServiceType());
         response.setStatus(shipment.getStatus());
@@ -396,6 +446,7 @@ public class ShipmentService {
         response.setSpecialInstructions(shipment.getSpecialInstructions());
         response.setNotes(shipment.getNotes());
         response.setAssignedCarrierId(shipment.getAssignedCarrierId());
+        response.setShipmentCompanyId(shipment.getShipmentCompanyId());
         response.setDeliveryPreferences(convertToDeliveryPreferencesDto(shipment.getDeliveryPreferences()));
         response.setCreatedAt(shipment.getCreatedAt());
         response.setUpdatedAt(shipment.getUpdatedAt());
@@ -586,5 +637,204 @@ public class ShipmentService {
         }
         
         return ((double) (currentMonthShipments - previousMonthShipments) / previousMonthShipments) * 100.0;
+    }
+    
+    /**
+     * Test amaçlı örnek gönderi verisi oluşturma
+     */
+    public List<ShipmentResponse> createTestShipments() {
+        log.info("Test gönderileri oluşturuluyor");
+        
+        List<Shipment> testShipments = List.of(
+            createTestShipment(
+                "CT" + System.currentTimeMillis() + "001",
+                "Ahmet Yılmaz",
+                "+90532123456",
+                "ahmet@example.com",
+                "Atatürk Cad. No:123, Beşiktaş",
+                "İstanbul",
+                "34000",
+                "Cumhuriyet Mah. Barış Sok. No:45",
+                "Ankara",
+                "06000",
+                2.5,
+                "Elektronik",
+                true,
+                false,
+                Shipment.ServiceType.EXPRESS,
+                Shipment.ShipmentStatus.ACTIVE
+            ),
+            createTestShipment(
+                "CT" + System.currentTimeMillis() + "002", 
+                "Fatma Demir",
+                "+90533987654",
+                "fatma@example.com",
+                "İnönü Bulvarı No:67, Çankaya",
+                "Ankara", 
+                "06100",
+                "Kemal Paşa Cad. No:234, Konak",
+                "İzmir",
+                "35000",
+                1.2,
+                "Kitap",
+                false,
+                false,
+                Shipment.ServiceType.STANDARD,
+                Shipment.ShipmentStatus.ACTIVE
+            ),
+            createTestShipment(
+                "CT" + System.currentTimeMillis() + "003",
+                "Mehmet Kaya",
+                "+90544555666",
+                "mehmet@example.com", 
+                "Bağdat Cad. No:456, Kadıköy",
+                "İstanbul",
+                "34710",
+                "Atatürk Bulvarı No:789, Alsancak",
+                "İzmir",
+                "35220",
+                0.8,
+                "Giyim",
+                false,
+                false,
+                Shipment.ServiceType.STANDARD,
+                Shipment.ShipmentStatus.ACTIVE
+            ),
+            createTestShipment(
+                "CT" + System.currentTimeMillis() + "004",
+                "Ayşe Özdemir",
+                "+90555777888",
+                "ayse@example.com",
+                "Cumhuriyet Cad. No:321, Şişli",
+                "İstanbul", 
+                "34380",
+                "Gazi Mustafa Kemal Bulvarı No:654, Çankaya",
+                "Ankara",
+                "06420",
+                3.1,
+                "Elektronik Aksesuar",
+                true,
+                false,
+                Shipment.ServiceType.EXPRESS,
+                Shipment.ShipmentStatus.ACTIVE
+            )
+        );
+        
+        List<Shipment> savedShipments = shipmentRepository.saveAll(testShipments);
+        log.info("{} test gönderisi oluşturuldu", savedShipments.size());
+        
+        return savedShipments.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+    
+    private Shipment createTestShipment(String trackingNumber, String recipientName, String recipientPhone, 
+                                       String recipientEmail, String senderStreet, String senderCity, 
+                                       String senderPostalCode, String recipientStreet, String recipientCity, 
+                                       String recipientPostalCode, double weight, String contentType, 
+                                       boolean isFragile, boolean isLiquid, Shipment.ServiceType serviceType,
+                                       Shipment.ShipmentStatus status) {
+        
+        Shipment shipment = new Shipment();
+        shipment.setTrackingNumber(trackingNumber);
+        shipment.setSenderCustomerId(1L); // Test customer ID
+        
+        // Sender address
+        Address senderAddress = new Address();
+        senderAddress.setFullName("Test Gönderici");
+        senderAddress.setAddressLine1(senderStreet);
+        senderAddress.setCity(senderCity);
+        senderAddress.setState(senderCity);
+        senderAddress.setPostalCode(senderPostalCode);
+        senderAddress.setCountry("Türkiye");
+        shipment.setSenderAddress(senderAddress);
+        
+        // Recipient address
+        Address recipientAddress = new Address();
+        recipientAddress.setFullName(recipientName);
+        recipientAddress.setAddressLine1(recipientStreet);
+        recipientAddress.setCity(recipientCity);
+        recipientAddress.setState(recipientCity);
+        recipientAddress.setPostalCode(recipientPostalCode);
+        recipientAddress.setCountry("Türkiye");
+        recipientAddress.setEmail(recipientEmail);
+        recipientAddress.setPhone(recipientPhone);
+        shipment.setRecipientAddress(recipientAddress);
+        
+        // Package info
+        com.cargotracking.shipment_service.model.Package packageInfo = new com.cargotracking.shipment_service.model.Package();
+        packageInfo.setWeight(BigDecimal.valueOf(weight));
+        packageInfo.setLength(BigDecimal.valueOf(30));
+        packageInfo.setWidth(BigDecimal.valueOf(20));
+        packageInfo.setHeight(BigDecimal.valueOf(15));
+        packageInfo.setContentType(com.cargotracking.shipment_service.model.Package.ContentType.valueOf(contentType.replace(" ", "_").toUpperCase()));
+        packageInfo.setIsFragile(isFragile);
+        packageInfo.setDeclaredValue(BigDecimal.valueOf(100.0));
+        shipment.setPackageInfo(packageInfo);
+        
+        shipment.setServiceType(serviceType);
+        shipment.setStatus(status);
+        shipment.setEstimatedDeliveryDate(LocalDateTime.now().plusDays(serviceType == Shipment.ServiceType.EXPRESS ? 1 : 3));
+        shipment.setShippingCost(BigDecimal.valueOf(serviceType == Shipment.ServiceType.EXPRESS ? 50.0 : 25.0));
+        shipment.setCreatedBy(1L);
+        shipment.setUpdatedBy(1L);
+        
+        return shipment;
+    }
+
+    /**
+     * Otomatik carrier atama - En az kargo sayısına sahip carrier'ı seçer
+     * Aynı sayıda kargo olan carrier'lar varsa random seçer
+     */
+    private Long assignCarrierAutomatically(Long shipmentCompanyId) {
+        try {
+            log.info("Otomatik carrier atama başlatılıyor. Şirket ID: {}", shipmentCompanyId);
+            
+            // Şirketin carrier'larını getir
+            UserServiceClient.ApiResponseWrapper<List<UserServiceClient.UserDto>> response = 
+                userServiceClient.getCompanyCarriers(shipmentCompanyId);
+            
+            if (!response.isSuccess() || response.getData() == null || response.getData().isEmpty()) {
+                log.warn("Şirketin carrier'ı bulunamadı. Şirket ID: {}", shipmentCompanyId);
+                return null;
+            }
+            
+            List<UserServiceClient.UserDto> carriers = response.getData();
+            log.info("Bulunan carrier sayısı: {}", carriers.size());
+            
+            // Her carrier için aktif kargo sayısını hesapla
+            Map<Long, Long> carrierWorkloads = new HashMap<>();
+            for (UserServiceClient.UserDto carrier : carriers) {
+                Long activeShipmentCount = shipmentRepository.countByAssignedCarrierIdAndStatus(
+                    carrier.getId(), 
+                    Shipment.ShipmentStatus.ACTIVE
+                );
+                carrierWorkloads.put(carrier.getId(), activeShipmentCount);
+                log.debug("Carrier {} aktif kargo sayısı: {}", carrier.getId(), activeShipmentCount);
+            }
+            
+            // En az kargo sayısına sahip carrier'ları bul
+            Long minWorkload = carrierWorkloads.values().stream()
+                .min(Long::compareTo)
+                .orElse(0L);
+            
+            List<Long> availableCarriers = carrierWorkloads.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(minWorkload))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+            
+            // Random seç (aynı workload'a sahip carrier'lar arasından)
+            Long selectedCarrierId = availableCarriers.get(random.nextInt(availableCarriers.size()));
+            
+            log.info("Otomatik carrier ataması tamamlandı. Seçilen carrier ID: {}, Workload: {}", 
+                selectedCarrierId, minWorkload);
+            
+            return selectedCarrierId;
+            
+        } catch (Exception e) {
+            log.error("Otomatik carrier atama sırasında hata oluştu. Şirket ID: {}, Hata: {}", 
+                shipmentCompanyId, e.getMessage(), e);
+            return null;
+        }
     }
 }

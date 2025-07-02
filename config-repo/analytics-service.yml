@@ -1,21 +1,12 @@
-server:
-  port: 8085
-
 spring:
-  application:
-    name: analytics-service
-  profiles:
-    active:docker
-
-
-  # Database Configuration
-
   datasource:
     url: jdbc:postgresql://postgres:5432/analytics_db
-    username: postgres
-    password: postgres
+    username: user
+    password: password
     driver-class-name: org.postgresql.Driver
-
+  data:
+    mongodb:
+      uri: mongodb://mongodb:27017/analytics_db
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,23 +14,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
 
-
-  data:
-    mongodb:
-      uri: ${MONGODB_URL:mongodb://mongodb:27017/analytics_db}
-
-# Eureka Client Configuration
 eureka:
-  client:
-    service-url:
-      defaultZone: http://eureka-server:8761/eureka/
   instance:
-    preferIpAddress: true
-    instanceId: ${spring.application.name}:${server.port}
-
-# Logging Configuration
-logging:
-  level:
-    com.cargotracking: DEBUG
-    root: INFO
+    prefer-ip-address: true

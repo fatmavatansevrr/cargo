@@ -19,9 +19,11 @@ public class ShipmentResponse {
     
     private Long id;
     private String trackingNumber;
-    private Long senderUserId;
+    private Long senderCustomerId;
     private AddressDto senderAddress;
     private AddressDto recipientAddress;
+    private String recipientEmail;
+    private String recipientPhone;
     private PackageDto packageInfo;
     private Shipment.ServiceType serviceType;
     private Shipment.ShipmentStatus status;
@@ -31,6 +33,7 @@ public class ShipmentResponse {
     private String specialInstructions;
     private String notes;
     private Long assignedCarrierId;
+    private Long shipmentCompanyId;
     private DeliveryPreferencesDto deliveryPreferences; // FR-SM-009
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -21,3 +21,7 @@ management:
 server:
   error:
     include-message: always
+
+# For JWT generation and validation
+jwt:
+  secret: MySecretKeyForJWTSigningMustBeAtLeast256BitsLongForSecurityReasons123456789

@@ -14,6 +14,7 @@ import CreateShipmentPage from './pages/CreateShipmentPage';
 import TrackShipmentPage from './pages/TrackShipmentPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ReportsPage from './pages/ReportsPage';
+import CarrierTrackingPage from './pages/CarrierTrackingPage';
 
 // React Query client
 const queryClient = new QueryClient({
@@ -179,6 +180,16 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute requiredPermissions={[Permission.VIEW_NOTIFICATIONS]}>
                     <NotificationsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Carrier Tracking Page - Sadece CARRIER rolü */}
+              <Route
+                path="/carrier/tracking"
+                element={
+                  <ProtectedRoute requiredPermissions={[Permission.CARRIER_TRACKING_MANAGEMENT]}>
+                    <CarrierTrackingPage />
                   </ProtectedRoute>
                 }
               />

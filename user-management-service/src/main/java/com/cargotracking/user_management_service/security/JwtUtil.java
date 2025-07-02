@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,13 +42,13 @@ public class JwtUtil {
     }
 
     public String generateToken(String username, Set<Role> roles) {
-        String rolesString = roles.stream()
+        List<String> rolesList = roles.stream()
                 .map(Role::name)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.toList());
                 
         return Jwts.builder()
                 .setSubject(username)
-                .claim("roles", rolesString)
+                .claim("roles", rolesList)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)

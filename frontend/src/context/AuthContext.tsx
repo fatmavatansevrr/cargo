@@ -20,43 +20,57 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Role normalizasyon fonksiyonu
+// Backend'den ROLE_ prefix'i ile gelen veriler frontend'de ROLE_ olmadan kullanılıyor
+
+// Role normalizasyon fonksiyonu - Backend'den ROLE_ prefix'i ile gelen veriyi frontend formatına çevirir
 const normalizeUserRole = (userData: any): UserRole | null => {
   if (!userData) return null;
-  
-  // Eğer role field'ı varsa
-  if (userData.role && typeof userData.role === 'string') {
-    const role = userData.role.toLowerCase();
-    if (Object.values(UserRole).includes(role as UserRole)) {
-      return role as UserRole;
-    }
-  }
-  
-  // Eğer roles array'i varsa
-  if (userData.roles && Array.isArray(userData.roles) && userData.roles.length > 0) {
-    const role = userData.roles[0].toLowerCase();
-    if (Object.values(UserRole).includes(role as UserRole)) {
-      return role as UserRole;
-    }
-  }
-  
-  // Eğer authorities field'ı varsa (Spring Security format)
-  if (userData.authorities && Array.isArray(userData.authorities) && userData.authorities.length > 0) {
+
+  console.log('🔍 normalizeUserRole - Gelen Veri:', userData);
+
+  let roleString: string | undefined;
+
+  // 1. Spring Security'den gelen 'authorities'
+  if (Array.isArray(userData.authorities) && userData.authorities.length > 0) {
     const authority = userData.authorities[0];
-    let roleString = '';
-    
-    if (typeof authority === 'string') {
-      roleString = authority.replace('ROLE_', '');
-    } else if (authority.authority) {
-      roleString = authority.authority.replace('ROLE_', '');
-    }
-    
-    const role = roleString.toLowerCase();
-    if (Object.values(UserRole).includes(role as UserRole)) {
-      return role as UserRole;
-    }
+    roleString = typeof authority === 'string' ? authority : authority?.authority;
+  }
+  // 2. 'roles' dizisi (genellikle JWT payload)
+  else if (Array.isArray(userData.roles) && userData.roles.length > 0) {
+    const role = userData.roles[0];
+    roleString = typeof role === 'string' ? role : role?.name;
+  }
+  // 3. 'role' alanı (string veya nesne)
+  else if (userData.role) {
+    roleString = typeof userData.role === 'string' ? userData.role : userData.role?.name;
+  }
+
+  console.log('🔍 normalizeUserRole - Ham Rol Dizesi:', roleString);
+
+  if (!roleString) {
+    console.warn('❌ normalizeUserRole: Kullanıcı verisinden rol dizesi çıkarılamadı.');
+    return null;
+  }
+
+  // String'e çevir ve büyük harfe dönüştür
+  let cleanRoleString = roleString.toUpperCase();
+  
+  // Backend'den ROLE_ prefix'i ile gelirse kaldır
+  if (cleanRoleString.startsWith('ROLE_')) {
+    cleanRoleString = cleanRoleString.replace('ROLE_', '');
   }
   
+  console.log('🔍 normalizeUserRole - Temizlenmiş Rol Dizesi:', cleanRoleString);
+
+  // Enum ile eşleştirme - ROLE_ prefix'i olmadan
+  for (const [key, value] of Object.entries(UserRole)) {
+    if (key === cleanRoleString || value === cleanRoleString) {
+      console.log('✅ normalizeUserRole - Eşleşme bulundu:', value);
+      return value as UserRole;
+    }
+  }
+
+  console.warn(`❌ normalizeUserRole: Eşleşen rol bulunamadı: "${cleanRoleString}"`);
   return null;
 };
 
@@ -65,12 +79,14 @@ const normalizeUser = (userData: any): User | null => {
   if (!userData) return null;
   
   const normalizedRole = normalizeUserRole(userData);
+  console.log('🔍 normalizeUser - normalizedRole:', normalizedRole);
+  
   if (!normalizedRole) {
     console.warn('Kullanıcının geçerli bir rolü yok. Role:', userData.roles || userData.role);
     return null;
   }
   
-  return {
+  const user = {
     id: userData.id || userData.userId || '',
     email: userData.email || userData.username || '',
     firstName: userData.firstName || userData.name || userData.fullName || 'Kullanıcı',
@@ -81,6 +97,15 @@ const normalizeUser = (userData: any): User | null => {
     createdAt: userData.createdAt || userData.createDate || new Date().toISOString(),
     updatedAt: userData.updatedAt || userData.updateDate || new Date().toISOString()
   };
+  
+  console.log('🔍 normalizeUser - final user object:', user);
+  console.log('🔍 normalizeUser - final user role:', user.role);
+  console.log('🔍 normalizeUser - final user role type:', typeof user.role);
+  
+  // Force re-render trigger için timestamp ekle
+  (user as any).lastUpdated = Date.now();
+  
+  return user;
 };
 
 interface AuthProviderProps {
@@ -108,6 +133,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.success && response.data) {
         const normalizedUser = normalizeUser(response.data);
+        console.log('🐛 AUTH DEBUG - checkAuthStatus success, normalized user:', normalizedUser);
+        console.log('🐛 AUTH DEBUG - Setting user in state from checkAuthStatus');
         setUser(normalizedUser);
       } else {
         // Token geçersiz, temizle
@@ -136,6 +163,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // User bilgilerini normalize et
         const normalizedUser = normalizeUser(response.data.user || response.data);
+        console.log('🐛 AUTH DEBUG - Login success, normalized user:', normalizedUser);
+        console.log('🐛 AUTH DEBUG - Setting user in state');
         setUser(normalizedUser);
         
         return true;

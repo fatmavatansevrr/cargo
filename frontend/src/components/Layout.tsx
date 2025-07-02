@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from './Header';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,10 +11,23 @@ interface LayoutProps {
  * Responsive tasarım ve accessibility özellikleri içerir
  */
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header component'i */}
-      <Header />
+      {/* Sidebar component'i */}
+      <Sidebar open={sidebarOpen} onClose={handleSidebarClose} />
+      
+      {/* Header component'i - sidebar toggle fonksiyonu ile */}
+      <Header onSidebarToggle={handleSidebarToggle} />
       
       {/* Ana içerik alanı - responsive ve accessible */}
       <main 

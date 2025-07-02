@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LoginData } from '../types';
 
@@ -9,7 +9,6 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string>('');
   
   const { login } = useAuth();
-  const navigate = useNavigate();
   
   const {
     register,
@@ -284,8 +283,8 @@ const LoginPage: React.FC = () => {
               </h4>
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
-                  <span className="font-medium text-gray-700">Admin:</span>
-                  <span className="text-gray-600 font-mono text-sm">admin@test.com / 123456</span>
+                                  <span className="font-medium text-gray-700">Kargo Şirketi:</span>
+                <span className="text-gray-600 font-mono text-sm">admin@test.com / 123456</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
                   <span className="font-medium text-gray-700">Kullanıcı:</span>

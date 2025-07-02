@@ -31,18 +31,68 @@ public class NotificationService {
     private final UserServiceClient userServiceClient;
 
     /**
-     * Shipment event işle
+     * Shipment event işle - Requirements.md Faz 5'e göre güncellendi
      */
     @Async
     public void processShipmentEvent(ShipmentEvent event) {
         log.info("📦 Processing shipment event: {}", event.getEventType());
         
-        String customerEmail = extractCustomerEmail(event);
-        if (customerEmail != null) {
-            String subject = "Shipment Update: " + event.getEventType();
-            String message = "Your shipment " + event.getTrackingNumber() + " has been " + event.getEventType();
+        // ShipmentCreatedEvent için özel işlem - alıcıya takip numarası gönder
+        if ("SHIPMENT_CREATED".equals(event.getEventType())) {
+            handleShipmentCreatedEvent(event);
+        } else {
+            // Diğer event türleri için mevcut işlem
+            String customerEmail = extractCustomerEmail(event);
+            if (customerEmail != null) {
+                String subject = "Shipment Update: " + event.getEventType();
+                String message = "Your shipment " + event.getTrackingNumber() + " has been " + event.getEventType();
+                
+                sendEmailNotification(customerEmail, subject, message);
+            }
+        }
+    }
+    
+    /**
+     * ShipmentCreatedEvent işle - alıcıya takip numarası gönder
+     */
+    private void handleShipmentCreatedEvent(ShipmentEvent event) {
+        log.info("📦 Handling SHIPMENT_CREATED event for tracking: {}", event.getTrackingNumber());
+        
+        try {
+            // Alıcı iletişim bilgilerini event'ten al
+            String recipientEmail = event.getRecipientEmail();
+            String recipientPhone = event.getRecipientPhone();
+            String trackingNumber = event.getTrackingNumber();
             
-            sendEmailNotification(customerEmail, subject, message);
+            // E-posta bildirimi gönder
+            if (recipientEmail != null && !recipientEmail.trim().isEmpty()) {
+                String subject = "Kargonuz Oluşturuldu - Takip Numarası: " + trackingNumber;
+                String message = String.format(
+                    "Sayın Müşteri,\n\n" +
+                    "Kargonuz başarıyla oluşturuldu.\n" +
+                    "Takip Numarası: %s\n\n" +
+                    "Bu numara ile kargonuzun durumunu takip edebilirsiniz.\n\n" +
+                    "İyi günler dileriz.",
+                    trackingNumber
+                );
+                
+                sendEmailNotification(recipientEmail, subject, message);
+                log.info("✅ Tracking number email sent to recipient: {}", recipientEmail);
+            }
+            
+            // SMS bildirimi gönder
+            if (recipientPhone != null && !recipientPhone.trim().isEmpty()) {
+                String smsMessage = String.format(
+                    "Kargonuz oluşturuldu. Takip No: %s. Durumunu takip edebilirsiniz.",
+                    trackingNumber
+                );
+                
+                sendSmsNotification(recipientPhone, smsMessage);
+                log.info("✅ Tracking number SMS sent to recipient: {}", recipientPhone);
+            }
+            
+        } catch (Exception e) {
+            log.error("❌ Failed to handle SHIPMENT_CREATED event", e);
         }
     }
 
@@ -180,6 +230,16 @@ public class NotificationService {
             log.info("✅ Email notification sent to: {}", to);
         } catch (Exception e) {
             log.error("❌ Failed to send email notification", e);
+        }
+    }
+    
+    private void sendSmsNotification(String to, String message) {
+        try {
+            smsService.sendSms(to, message);
+            saveNotificationRecord(to, "SMS", message, "SMS");
+            log.info("✅ SMS notification sent to: {}", to);
+        } catch (Exception e) {
+            log.error("❌ Failed to send SMS notification", e);
         }
     }
     

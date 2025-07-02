@@ -17,6 +17,10 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:

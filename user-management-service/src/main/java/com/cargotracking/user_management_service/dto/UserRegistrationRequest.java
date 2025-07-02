@@ -37,4 +37,7 @@ public class UserRegistrationRequest {
 
     @NotEmpty(message = "En az bir rol seçilmelidir")
     private Set<Role> roles;
+
+    // Kurye (CARRIER) kaydı için - Hangi kargo şirketine bağlı olduğunu belirtir
+    private Long companyId;
 } 

@@ -9,6 +9,9 @@ export enum Permission {
   DELETE_SHIPMENT = 'DELETE_SHIPMENT',
   TRACK_SHIPMENTS = 'TRACK_SHIPMENTS',
   
+  // Carrier specific permissions
+  CARRIER_TRACKING_MANAGEMENT = 'CARRIER_TRACKING_MANAGEMENT', // Sadece CARRIER rolü için
+  
   // User management permissions
   MANAGE_USERS = 'MANAGE_USERS',
   VIEW_USERS = 'VIEW_USERS',
@@ -21,19 +24,30 @@ export enum Permission {
   VIEW_NOTIFICATIONS = 'VIEW_NOTIFICATIONS',
   MANAGE_NOTIFICATIONS = 'MANAGE_NOTIFICATIONS',
   
-  // Admin permissions
+  // Kargo şirketi permissions
   SYSTEM_SETTINGS = 'SYSTEM_SETTINGS',
   VIEW_ANALYTICS = 'VIEW_ANALYTICS'
 }
 
-// Rol - İzin mapping'i (role string değerleri ile)
+// Rol - İzin mapping'i - Backend ile aynı format (ROLE_ prefix olmadan)
 const rolePermissions: Record<UserRole, Permission[]> = {
-  [UserRole.ADMIN]: [
+  [UserRole.CUSTOMER]: [
     Permission.CREATE_SHIPMENT,
+    Permission.VIEW_SHIPMENTS,
+    Permission.TRACK_SHIPMENTS,
+    Permission.VIEW_NOTIFICATIONS
+  ],
+  [UserRole.CARRIER]: [
+    Permission.VIEW_SHIPMENTS,
+    Permission.UPDATE_SHIPMENT,
+    Permission.TRACK_SHIPMENTS,
+    Permission.VIEW_NOTIFICATIONS,
+    Permission.CARRIER_TRACKING_MANAGEMENT // Sadece CARRIER için özel permission
+  ],
+  [UserRole.SHIPMENT_COMPANY]: [
     Permission.VIEW_SHIPMENTS,
     Permission.UPDATE_SHIPMENT,
     Permission.DELETE_SHIPMENT,
-    Permission.TRACK_SHIPMENTS,
     Permission.MANAGE_USERS,
     Permission.VIEW_USERS,
     Permission.VIEW_REPORTS,
@@ -42,62 +56,19 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     Permission.MANAGE_NOTIFICATIONS,
     Permission.SYSTEM_SETTINGS,
     Permission.VIEW_ANALYTICS
-  ],
-  [UserRole.SHIPPER]: [
-    Permission.CREATE_SHIPMENT,
-    Permission.VIEW_SHIPMENTS,
-    Permission.UPDATE_SHIPMENT,
-    Permission.TRACK_SHIPMENTS,
-    Permission.VIEW_NOTIFICATIONS,
-    Permission.VIEW_REPORTS
-  ],
-  [UserRole.CARRIER]: [
-    Permission.VIEW_SHIPMENTS,
-    Permission.UPDATE_SHIPMENT,
-    Permission.TRACK_SHIPMENTS,
-    Permission.VIEW_NOTIFICATIONS
-  ],
-  [UserRole.CUSTOMER]: [
-    Permission.VIEW_SHIPMENTS,
-    Permission.TRACK_SHIPMENTS,
-    Permission.VIEW_NOTIFICATIONS
   ]
 };
 
-/**
- * Role değerini string'e çevirir - backend'den object olarak gelebilir
- */
-const extractRoleString = (userRole: any): string => {
-  if (typeof userRole === 'string') {
-    return userRole.toLowerCase();
-  }
-  
-  // Role object ise (örn: {name: "ADMIN"} veya {roleName: "admin"})
-  if (typeof userRole === 'object' && userRole !== null) {
-    // Possible field names for role
-    const possibleFields = ['name', 'roleName', 'role', 'authority'];
-    
-    for (const field of possibleFields) {
-      if (userRole[field] && typeof userRole[field] === 'string') {
-        return String(userRole[field]).toLowerCase();
-      }
-    }
-    
-    // Eğer array ise ilk elemanı al
-    if (Array.isArray(userRole) && userRole.length > 0) {
-      return extractRoleString(userRole[0]);
-    }
-  }
-  
-  console.error('❌ Could not extract role string from:', userRole);
-  return '';
-};
+// Backend'den ROLE_ prefix'i ile gelen veriler frontend'de ROLE_ olmadan kullanılıyor
 
 /**
  * Kullanıcının belirli bir izni olup olmadığını kontrol eder
  */
 export const hasPermission = (userRole: string | UserRole | undefined | null, permission: Permission): boolean => {
+  console.log('🔍 hasPermission - Input role:', userRole, 'Permission:', permission);
+  
   const normalizedRole = normalizeRole(userRole);
+  console.log('🔍 hasPermission - Normalized role:', normalizedRole);
   
   if (!normalizedRole) {
     console.warn('hasPermission: Geçersiz role:', userRole);
@@ -105,7 +76,12 @@ export const hasPermission = (userRole: string | UserRole | undefined | null, pe
   }
   
   const permissions = rolePermissions[normalizedRole];
-  return permissions ? permissions.includes(permission) : false;
+  console.log('🔍 hasPermission - Available permissions for role:', permissions);
+  
+  const hasAccess = permissions ? permissions.includes(permission) : false;
+  console.log('🔍 hasPermission - Has access:', hasAccess);
+  
+  return hasAccess;
 };
 
 /**
@@ -150,36 +126,49 @@ export const canAccessPage = (userRole: string | UserRole | undefined | null, re
  */
 export const getAccessDeniedMessage = (permission: Permission): string => {
   const messages = {
-    [Permission.CREATE_SHIPMENT]: 'Gönderi oluşturmak için Gönderici veya Admin yetkisine sahip olmalısınız.',
+    [Permission.CREATE_SHIPMENT]: 'Gönderi oluşturmak için Müşteri veya Kargo Şirketi yetkisine sahip olmalısınız.',
     [Permission.VIEW_SHIPMENTS]: 'Gönderileri görüntülemek için yetkiniz bulunmamaktadır.',
-    [Permission.UPDATE_SHIPMENT]: 'Gönderi durumunu güncellemek için Taşıyıcı veya Admin yetkisine sahip olmalısınız.',
-    [Permission.DELETE_SHIPMENT]: 'Gönderi silmek için Admin yetkisine sahip olmalısınız.',
+    [Permission.UPDATE_SHIPMENT]: 'Gönderi durumunu güncellemek için Taşıyıcı veya Kargo Şirketi yetkisine sahip olmalısınız.',
+    [Permission.DELETE_SHIPMENT]: 'Gönderi silmek için Kargo Şirketi yetkisine sahip olmalısınız.',
     [Permission.TRACK_SHIPMENTS]: 'Gönderi takibi yapma yetkiniz bulunmamaktadır.',
-    [Permission.MANAGE_USERS]: 'Kullanıcı yönetimi için Admin yetkisine sahip olmalısınız.',
-    [Permission.VIEW_USERS]: 'Kullanıcıları görüntülemek için Admin yetkisine sahip olmalısınız.',
-    [Permission.VIEW_REPORTS]: 'Raporları görüntülemek için Gönderici veya Admin yetkisine sahip olmalısınız.',
-    [Permission.EXPORT_REPORTS]: 'Rapor dışa aktarmak için Admin yetkisine sahip olmalısınız.',
+    [Permission.CARRIER_TRACKING_MANAGEMENT]: 'Kargo takip yönetimi için Taşıyıcı yetkisine sahip olmalısınız.',
+    [Permission.MANAGE_USERS]: 'Kullanıcı yönetimi için Kargo Şirketi yetkisine sahip olmalısınız.',
+    [Permission.VIEW_USERS]: 'Kullanıcıları görüntülemek için Kargo Şirketi yetkisine sahip olmalısınız.',
+    [Permission.VIEW_REPORTS]: 'Raporları görüntülemek için Kargo Şirketi yetkisine sahip olmalısınız.',
+    [Permission.EXPORT_REPORTS]: 'Rapor dışa aktarmak için Kargo Şirketi yetkisine sahip olmalısınız.',
     [Permission.VIEW_NOTIFICATIONS]: 'Bu sayfaya erişim yetkiniz bulunmamaktadır.',
-    [Permission.MANAGE_NOTIFICATIONS]: 'Bildirimleri yönetmek için Admin yetkisine sahip olmalısınız.',
-    [Permission.SYSTEM_SETTINGS]: 'Sistem ayarlarını yönetmek için Admin yetkisine sahip olmalısınız.',
-    [Permission.VIEW_ANALYTICS]: 'Analizleri görüntülemek için Admin yetkisine sahip olmalısınız.'
+    [Permission.MANAGE_NOTIFICATIONS]: 'Bildirimleri yönetmek için Kargo Şirketi yetkisine sahip olmalısınız.',
+    [Permission.SYSTEM_SETTINGS]: 'Sistem ayarlarını yönetmek için Kargo Şirketi yetkisine sahip olmalısınız.',
+    [Permission.VIEW_ANALYTICS]: 'Analizleri görüntülemek için Kargo Şirketi yetkisine sahip olmalısınız.'
   };
   
   return messages[permission] || 'Bu işlemi gerçekleştirmek için yeterli yetkiniz bulunmamaktadır.';
 };
 
-// Role normalizasyon fonksiyonu
+// Role normalizasyon fonksiyonu - Backend'den ROLE_ prefix'i ile gelen veriyi frontend formatına çevirir
 const normalizeRole = (role: string | UserRole | undefined | null): UserRole | null => {
+  console.log('🔍 normalizeRole - Input:', role, 'Type:', typeof role);
+  
   if (!role) return null;
   
-  const roleString = role.toString().toUpperCase();
+  // String'e çevir ve büyük harfe dönüştür
+  let roleString = role.toString().toUpperCase();
+  
+  // Backend'den ROLE_ prefix'i ile gelirse kaldır
+  if (roleString.startsWith('ROLE_')) {
+    roleString = roleString.replace('ROLE_', '');
+  }
+  
+  console.log('🔍 normalizeRole - Clean Role String:', roleString);
   
   // UserRole enum değerlerini kontrol et
   for (const [key, value] of Object.entries(UserRole)) {
-    if (value.toUpperCase() === roleString || key.toUpperCase() === roleString) {
+    if (key === roleString || value === roleString) {
+      console.log('✅ normalizeRole - Eşleşme bulundu:', value);
       return value as UserRole;
     }
   }
   
+  console.warn(`❌ normalizeRole: Eşleşen rol bulunamadı: "${roleString}"`);
   return null;
 }; 

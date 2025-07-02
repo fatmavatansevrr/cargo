@@ -223,6 +223,7 @@ services:
       - REDIS_PORT=6379
       - EUREKA_URL=http://eureka-server:8761/eureka/
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "8083:8083"
 
@@ -240,29 +241,36 @@ services:
     networks:
       - cargo-tracking-network
     environment:
-      - CONFIG_SERVER_URL=http://config-server:8888        # Eklenmeli
-      - EUREKA_URL=http://eureka-server:8761/eureka/       # Eureka bağlantısı
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
       - MONGODB_URL=mongodb://mongodb:27017/notification_db
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - MAIL_HOST=smtp.gmail.com                           # Mail desteği varsa dışarıdan ayarlanabilir
+      - SPRING_PROFILES_ACTIVE=docker
+      - USER_SERVICE_URL=http://user-management-service:8081
+      - SHIPMENT_SERVICE_URL=http://shipment-service:8082
+      - TRACKING_SERVICE_URL=http://tracking-service:8083
+      - MAIL_HOST=smtp.gmail.com
       - MAIL_PORT=587
-      - MAIL_USERNAME=cargotracking.test@gmail.com         # Gerçek değer .env ile geçilmeli
+      - MAIL_USERNAME=cargotracking.test@gmail.com
       - MAIL_PASSWORD=your-app-password
       - NOTIFICATION_FROM_EMAIL=noreply@cargotracking.com
       - NOTIFICATION_FROM_NAME=Cargo Tracking System
-    restart: on-failure                                     #  Servis hata alırsa yeniden başlat
-    healthcheck: # ✅ Sağlık kontrolü ile bağlı servisler beklenir
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/actuator/health" ]
+    ports:
+      - "8084:8084"
+    volumes:
+      - ./logs:/app/logs
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
-
-    ports:
-      - "8084:8084"
+      start_period: 90s
 
   analytics-service:
     build: ./analytics-service
+    ports:
+      - "8085:8085"
     depends_on:
       config-server:
         condition: service_healthy
@@ -270,34 +278,14 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      mongodb:
-        condition: service_healthy
     networks:
       - cargo-tracking-network
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/analytics_db
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
-      - MONGODB_URL=mongodb://mongodb:27017/analytics_db
-      - EUREKA_URL=http://eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
       - SPRING_PROFILES_ACTIVE=docker
-      - DDL_AUTO=update
-      - SHOW_SQL=true
-      - LOG_PATH=/app/logs
-    ports:
-      - "8085:8085"
-    volumes:
-      - ./logs:/app/logs
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s  # Başlangıç süresini artırdık
-    restart: on-failure:3
 
-# Named volumes
+# Volumes
 volumes:
   postgres_data:
   mongodb_data:

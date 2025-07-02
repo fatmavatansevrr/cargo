@@ -1,5 +1,6 @@
 package com.cargotracking.shipment_service.controller;
 
+import com.cargotracking.shipment_service.client.UserServiceClient;
 import com.cargotracking.shipment_service.dto.CreateShipmentRequest;
 import com.cargotracking.shipment_service.dto.UpdateShipmentRequest;
 import com.cargotracking.shipment_service.dto.ShipmentResponse;
@@ -19,8 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-// import org.springframework.security.access.prepost.PreAuthorize;
-// import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,23 +40,24 @@ import java.util.Map;
 public class ShipmentController {
     
     private final ShipmentService shipmentService;
+    private final UserServiceClient userServiceClient;
     
     /**
      * Yeni gönderi oluşturma
      * Requirements: FR-SM-001 - Yetkili kullanıcılar yeni kargo gönderileri oluşturabilmelidir
      */
     @PostMapping
-    // @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('CUSTOMER')")
     @Operation(summary = "Yeni gönderi oluştur", description = "Yeni bir kargo gönderisi oluşturur")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Gönderi başarıyla oluşturuldu"),
-        @ApiResponse(responseCode = "400", description = "Geçersiz istek verisi")
-        // @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
-        // @ApiResponse(responseCode = "403", description = "Yetki yok")
+        @ApiResponse(responseCode = "400", description = "Geçersiz istek verisi"),
+        @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
+        @ApiResponse(responseCode = "403", description = "Yetki yok")
     })
     public ResponseEntity<ShipmentResponse> createShipment(
-            @Valid @RequestBody CreateShipmentRequest request) {
-            // Authentication authentication) {
+            @Valid @RequestBody CreateShipmentRequest request,
+            Authentication authentication) {
         
         log.info("Yeni gönderi oluşturma isteği alındı");
         
@@ -208,6 +210,51 @@ public class ShipmentController {
     }
     
     /**
+     * Carrier'a atanmış gönderileri listeleme
+     * Requirements: Carrier rolündeki kullanıcıların atandığı gönderileri görüntülemesi
+     */
+    @GetMapping("/carrier/assigned")
+    @PreAuthorize("hasRole('CARRIER')")
+    @Operation(summary = "Carrier gönderileri", description = "Carrier'a atanmış gönderileri listeler")
+    @ApiResponse(responseCode = "200", description = "Carrier gönderileri başarıyla listelendi")
+    public ResponseEntity<List<ShipmentResponse>> getCarrierShipments(Authentication authentication) {
+        
+        log.info("Carrier gönderileri listeleme isteği");
+        
+        // Gerçek implementasyonda JWT token'dan carrier ID alınacak
+        Long carrierId = 1L; // Test için sabit carrier ID
+        
+        List<ShipmentResponse> shipments = shipmentService.findCarrierShipments(carrierId);
+        return ResponseEntity.ok(shipments);
+    }
+    
+    /**
+     * Tüm kargo şirketlerini getir
+     * Shipment oluşturma sırasında dropdown için kullanılır
+     */
+    @GetMapping("/companies")
+    @Operation(summary = "Kargo şirketleri", description = "Tüm aktif kargo şirketlerini listeler")
+    @ApiResponse(responseCode = "200", description = "Kargo şirketleri başarıyla listelendi")
+    public ResponseEntity<List<UserServiceClient.UserDto>> getShipmentCompanies() {
+        log.info("Kargo şirketleri listeleme isteği alındı");
+        
+        try {
+            UserServiceClient.ApiResponseWrapper<List<UserServiceClient.UserDto>> response = 
+                userServiceClient.getShipmentCompanies();
+            
+            if (response.isSuccess() && response.getData() != null) {
+                return ResponseEntity.ok(response.getData());
+            } else {
+                log.warn("Kargo şirketleri getirilemedi: {}", response.getMessage());
+                return ResponseEntity.badRequest().build();
+            }
+        } catch (Exception e) {
+            log.error("Kargo şirketleri getirme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * Gönderi ID ile detay görüntüleme
      * Requirements: FR-SM-003 - Gönderi detaylarını görüntüleme
      */
@@ -283,4 +330,29 @@ public class ShipmentController {
             return ResponseEntity.ok(fallbackStats);
         }
     }
+
+    /**
+     * Test verisi oluşturma - sadece development için
+     */
+    @PostMapping("/create-test-data")
+    @Operation(summary = "Test verisi oluştur", description = "Carrier test etmek için örnek gönderiler oluşturur")
+    @ApiResponse(responseCode = "200", description = "Test verisi başarıyla oluşturuldu")
+    public ResponseEntity<Map<String, Object>> createTestData() {
+        log.info("Test verisi oluşturuluyor");
+        
+        try {
+            List<ShipmentResponse> createdShipments = shipmentService.createTestShipments();
+            return ResponseEntity.ok(Map.of(
+                "message", "Test verisi başarıyla oluşturuldu",
+                "createdShipments", createdShipments.size(),
+                "shipments", createdShipments
+            ));
+        } catch (Exception e) {
+            log.error("Test verisi oluştururken hata: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Test verisi oluşturulamadı: " + e.getMessage()
+            ));
+        }
+    }
+
 }

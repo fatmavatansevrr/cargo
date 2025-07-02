@@ -1,9 +1,8 @@
-// Kullanıcı rolleri için enum
+// Kullanıcı rolleri için enum - Backend ile aynı format (ROLE_ prefix olmadan)
 export enum UserRole {
-  SHIPPER = 'shipper',
-  CARRIER = 'carrier',
-  CUSTOMER = 'customer',
-  ADMIN = 'admin'
+  CUSTOMER = 'CUSTOMER',
+  CARRIER = 'CARRIER', 
+  SHIPMENT_COMPANY = 'SHIPMENT_COMPANY'
 }
 
 // Gönderi durumları için enum
@@ -40,13 +39,14 @@ export interface Address {
   country: string;
 }
 
-// Gönderi interface'i
+// Gönderi interface'i - Requirements.md'ye göre güncellenmiş
 export interface Shipment {
   id: string;
   trackingNumber: string;
-  senderId: string;
+  senderCustomerId: string;
   recipientName: string;
   recipientPhone: string;
+  recipientEmail: string; // Takip numarası gönderimi için gerekli
   senderAddress: Address;
   recipientAddress: Address;
   packageDetails: {
@@ -104,4 +104,15 @@ export interface RegisterData {
   phone: string;
   address?: string;
   roles: string[]; // Backend'de Set<Role> bekliyor
+}
+
+// Kargo şirketi interface'i
+export interface ShipmentCompany {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  address?: string;
 } 

@@ -160,10 +160,9 @@ const DashboardPage: React.FC = () => {
   };
 
   const getRoleSpecificMessage = (roles: string[]) => {
-    if (roles.includes('ADMIN')) return 'Sistem yöneticisi olarak tüm operasyonları kontrol edebilirsiniz.';
-    if (roles.includes('SHIPPER')) return 'Yeni gönderi oluşturabilir ve mevcut gönderilerinizi takip edebilirsiniz.';
+    if (roles.includes('SHIPMENT_COMPANY')) return 'Sistem yöneticisi olarak tüm operasyonları kontrol edebilirsiniz.';
     if (roles.includes('CARRIER')) return 'Size atanan gönderilerin durumlarını güncelleyebilirsiniz.';
-    if (roles.includes('CUSTOMER')) return 'Gönderilerinizi takip edebilir ve bildirim tercihlerinizi yönetebilirsiniz.';
+    if (roles.includes('CUSTOMER')) return 'Kargo gönderebilir, takip edebilir ve bildirim tercihlerinizi yönetebilirsiniz.';
     return 'CargoTrack sistemine hoş geldiniz!';
   };
 
@@ -183,6 +182,13 @@ const DashboardPage: React.FC = () => {
         color: 'bg-secondary-500 hover:bg-secondary-600', 
         href: '/tracking',
         permission: Permission.TRACK_SHIPMENTS
+      },
+      { 
+        title: 'Kargo Durum Güncelleme', 
+        icon: '🚛', 
+        color: 'bg-orange-500 hover:bg-orange-600', 
+        href: '/carrier/tracking',
+        permission: Permission.CARRIER_TRACKING_MANAGEMENT
       },
       { 
         title: 'Bildirimler', 

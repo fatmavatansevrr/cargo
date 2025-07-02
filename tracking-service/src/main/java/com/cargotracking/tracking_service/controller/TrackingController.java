@@ -1,20 +1,23 @@
 package com.cargotracking.tracking_service.controller;
 
 import com.cargotracking.tracking_service.dto.TrackingHistoryResponse;
+import com.cargotracking.tracking_service.dto.StatusChangedEvent;
 import com.cargotracking.tracking_service.model.TrackingState;
 import com.cargotracking.tracking_service.service.TrackingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RestController
@@ -25,15 +28,17 @@ import java.util.Optional;
 @SecurityRequirement(name = "bearerAuth")
 public class TrackingController {
 
-    private static final Logger log = LoggerFactory.getLogger(TrackingController.class);
     private final TrackingService trackingService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    private static final String STATUS_UPDATE_TOPIC = "status-update-topic";
 
     /**
      * Takip numarasına göre takip durumu getirir
-     * Roles: CUSTOMER, SHIPPER, CARRIER, ADMIN
+     * Roles: CUSTOMER, CARRIER, SHIPMENT_COMPANY
      */
     @GetMapping("/{trackingNumber}")
-    // @PreAuthorize("hasAnyRole('CUSTOMER', 'SHIPPER', 'CARRIER', 'ADMIN')") // Test için geçici olarak kapalı
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'CARRIER', 'SHIPMENT_COMPANY')")
     @Operation(summary = "Takip durumu getir", description = "Takip numarasına göre güncel gönderi durumunu getirir")
     public ResponseEntity<TrackingHistoryResponse> getTrackingStatus(@PathVariable String trackingNumber) {
         Optional<TrackingHistoryResponse> result = trackingService.getTrackingInfo(trackingNumber);
@@ -41,54 +46,83 @@ public class TrackingController {
     }
 
     /**
-     * Kargo durumu güncelleme - sadece Carrier ve Admin yetkilidir
+     * Kargo durumu güncelleme - sadece Carrier yetkilidir
      * FR-TR-002 gibi bir gereksinimle eşlenebilir
      */
     @PutMapping("/{trackingNumber}/status")
-    // @PreAuthorize("hasAnyRole('CARRIER', 'ADMIN')") // Test için geçici olarak kapalı
-    @Operation(summary = "Takip durumu güncelle (PUT)", description = "Kargonun mevcut durumunu günceller")
-    public ResponseEntity<TrackingHistoryResponse> updateStatus(
+    @PreAuthorize("hasRole('CARRIER')")
+    @Operation(summary = "Takip durumu güncelle (PUT)", description = "Kargonun mevcut durumunu günceller. Bu işlem doğrudan veritabanında güncellenir.")
+    public ResponseEntity<Void> updateStatus(
             @PathVariable String trackingNumber,
-            @RequestParam TrackingState newState) {
+            @RequestParam TrackingState newState,
+            @RequestParam(required = false) String location) {
 
-        log.info("Durum güncelleme isteği (PUT): tracking={}, state={}", trackingNumber, newState);
+        log.info("Durum güncelleme isteği (PUT) alındı: tracking={}, state={}", trackingNumber, newState);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String updatedBy = authentication != null ? authentication.getName() : "anonymous";
+
         try {
-            TrackingHistoryResponse response = trackingService.updateStatus(trackingNumber, newState);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            trackingService.updateStatus(trackingNumber, newState, location, updatedBy);
+            log.info("Durum başarıyla güncellendi: tracking={}, state={}", trackingNumber, newState);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Durum güncellenirken hata oluştu: tracking={}, error={}", trackingNumber, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
     /**
-     * Kargo durumu güncelleme (PATCH) - sadece Carrier ve Admin yetkilidir
+     * Kargo durumu güncelleme (PATCH) - sadece Carrier yetkilidir
      * Takip durumu güncelle endpoint'i
      */
     @PatchMapping("/{trackingNumber}/status")
-    // @PreAuthorize("hasAnyRole('CARRIER', 'ADMIN')") // Test için geçici olarak kapalı
-    @Operation(summary = "Takip durumu güncelle", description = "Kargonun mevcut durumunu günceller")
-    public ResponseEntity<TrackingHistoryResponse> patchUpdateStatus(
+    @PreAuthorize("hasRole('CARRIER')")
+    @Operation(summary = "Takip durumu güncelle (PATCH)", description = "Kargonun mevcut durumunu günceller. Bu işlem doğrudan veritabanında güncellenir.")
+    public ResponseEntity<Void> patchUpdateStatus(
             @PathVariable String trackingNumber,
-            @RequestParam TrackingState newState) {
+            @RequestParam TrackingState newState,
+            @RequestParam(required = false) String location) {
 
-        log.info("Durum güncelleme isteği (PATCH): tracking={}, state={}", trackingNumber, newState);
+        log.info("Durum güncelleme isteği (PATCH) alındı: tracking={}, state={}", trackingNumber, newState);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String updatedBy = authentication != null ? authentication.getName() : "anonymous";
+
         try {
-            TrackingHistoryResponse response = trackingService.updateStatus(trackingNumber, newState);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            log.error("Durum güncelleme hatası: tracking={}, error={}", trackingNumber, e.getMessage());
-            return ResponseEntity.badRequest().build();
+            trackingService.updateStatus(trackingNumber, newState, location, updatedBy);
+            log.info("Durum başarıyla güncellendi: tracking={}, state={}", trackingNumber, newState);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Durum güncellenirken hata oluştu: tracking={}, error={}", trackingNumber, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
     /**
      * Yönetim amaçlı: sistemdeki tüm takip kayıtlarını döner
-     * Sadece ADMIN görebilir
+     * Sadece SHIPMENT_COMPANY görebilir
      */
     @GetMapping("/all")
-    // @PreAuthorize("hasRole('ADMIN')") // Test için geçici olarak kapalı
+    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
     @Operation(summary = "Tüm takipleri listele", description = "Sistem genelindeki tüm takip kayıtlarını getirir")
     public ResponseEntity<?> getAllTrackings() {
         return ResponseEntity.ok(trackingService.getAllTrackings());
+    }
+
+    /**
+     * Test verisi oluşturma endpoint'i
+     * CARRIER ve SHIPMENT_COMPANY yetkilidir
+     */
+    @PostMapping("/create-test-data")
+    @PreAuthorize("hasAnyRole('CARRIER', 'SHIPMENT_COMPANY')")
+    @Operation(summary = "Test takip verisi oluştur", description = "Test amaçlı tracking kayıtları oluşturur")
+    public ResponseEntity<?> createTestTrackingData() {
+        log.info("Test tracking verisi oluşturuluyor");
+        try {
+            var result = trackingService.createTestTrackingData();
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Test tracking verisi oluşturulurken hata: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Test verisi oluşturulamadı: " + e.getMessage());
+        }
     }
 }

@@ -20,12 +20,12 @@ const TrackShipmentPage: React.FC = () => {
     setError(null);
 
     console.log('🔍 Takip isteği gönderiliyor:', {
-      url: `http://localhost:8080/api/tracking/${trackingNumber}`,
+      url: `http://localhost:8083/api/tracking/${trackingNumber}`,
       trackingNumber
     });
 
     try {
-      const response = await fetch(`http://localhost:8080/api/tracking/${trackingNumber}`);
+      const response = await fetch(`http://localhost:8083/api/tracking/${trackingNumber}`);
       
       console.log('📥 Takip response alındı:', {
         status: response.status,

@@ -28,12 +28,17 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     /**
      * Gönderici kullanıcı ID'sine göre gönderileri bulma
      */
-    Page<Shipment> findBySenderUserId(Long senderUserId, Pageable pageable);
+    Page<Shipment> findBySenderCustomerId(Long senderCustomerId, Pageable pageable);
     
     /**
      * Durum bazında gönderileri bulma
      */
     Page<Shipment> findByStatus(Shipment.ShipmentStatus status, Pageable pageable);
+    
+    /**
+     * Belirli durumlardan birinde olan gönderileri bulma
+     */
+    List<Shipment> findByStatusIn(List<Shipment.ShipmentStatus> statuses);
     
     /**
      * Taşıyıcıya atanmış gönderileri bulma
@@ -50,7 +55,7 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     /**
      * Gönderici ID ve durum bazında gönderileri bulma
      */
-    Page<Shipment> findBySenderUserIdAndStatus(Long senderUserId, 
+    Page<Shipment> findBySenderCustomerIdAndStatus(Long senderCustomerId, 
                                               Shipment.ShipmentStatus status, 
                                               Pageable pageable);
     
@@ -69,4 +74,10 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
      * Belirli hizmet tipindeki gönderileri bulma
      */
     Page<Shipment> findByServiceType(Shipment.ServiceType serviceType, Pageable pageable);
+    
+    /**
+     * Belirli carrier'a atanmış ve belirli durumdaki gönderileri sayma
+     * Otomatik carrier atama için kullanılır
+     */
+    Long countByAssignedCarrierIdAndStatus(Long carrierId, Shipment.ShipmentStatus status);
 } 

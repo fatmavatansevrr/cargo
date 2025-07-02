@@ -121,6 +121,10 @@ info:
     requirements: FR-SM-001,FR-SM-002,FR-SM-003,FR-SM-004,FR-SM-005,FR-SM-006,FR-SM-007,FR-SM-008
     profiles: ${spring.profiles.active}
 
+services:
+  user-management-service:
+    url: ${USER_MANAGEMENT_SERVICE_URL:http://user-management-service:8081}
+
 logging:
   level:
     com.cargotracking.shipment_service: DEBUG

@@ -170,6 +170,40 @@ export const shipmentService = {
     }
   },
 
+  // Kargo şirketlerini getir
+  async getShipmentCompanies(): Promise<ApiResponse<Array<{
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address?: string;
+  }>>> {
+    try {
+      const response = await api.get('/companies', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error: any) {
+      console.error('Shipment companies API error:', {
+        message: error.message,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+      
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Kargo şirketleri alınırken hata oluştu',
+      };
+    }
+  },
+
   // Dashboard istatistikleri al
   async getDashboardStats(): Promise<ApiResponse<{
     totalShipments: number;

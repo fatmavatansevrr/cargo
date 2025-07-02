@@ -134,9 +134,11 @@ public class ShipmentEvent {
                 this.recipientAddress = buildAddressString(recipientAddr);
                 this.recipientCity = (String) recipientAddr.get("city");
                 this.recipientCountry = (String) recipientAddr.get("country");
-                this.recipientEmail = (String) recipientAddr.get("email");
-                this.recipientPhone = (String) recipientAddr.get("phone");
             }
+            
+            // Recipient iletişim bilgileri direkt event data'dan al
+            this.recipientEmail = (String) data.get("recipientEmail");
+            this.recipientPhone = (String) data.get("recipientPhone");
             
             // Package Information
             Map<String, Object> packageInfo = (Map<String, Object>) data.get("packageInfo");

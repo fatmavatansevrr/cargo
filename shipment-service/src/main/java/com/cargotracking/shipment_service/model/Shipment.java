@@ -32,8 +32,8 @@ public class Shipment {
     private String trackingNumber; // FR-SM-002: Benzersiz takip numarası
     
     @NotNull(message = "Gönderici ID boş olamaz")
-    @Column(name = "sender_user_id", nullable = false)
-    private Long senderUserId; // User Management Service'den gelen kullanıcı ID
+    @Column(name = "sender_customer_id", nullable = false)
+    private Long senderCustomerId; // Gönderici CUSTOMER ID - User Management Service'den gelen
     
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_address_id", nullable = false)
@@ -74,6 +74,9 @@ public class Shipment {
     
     @Column(name = "assigned_carrier_id")
     private Long assignedCarrierId; // Taşıyıcı kullanıcı ID
+    
+    @Column(name = "shipment_company_id")
+    private Long shipmentCompanyId; // Seçilen kargo şirketi ID
     
     // FR-SM-009: Teslimat tercihleri
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
