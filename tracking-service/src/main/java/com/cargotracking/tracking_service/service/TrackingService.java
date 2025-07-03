@@ -1,11 +1,13 @@
 package com.cargotracking.tracking_service.service;
 
+import com.cargotracking.tracking_service.client.ShipmentServiceClient;
 import com.cargotracking.tracking_service.dto.StatusChangedEvent;
 import com.cargotracking.tracking_service.dto.TrackingHistoryResponse;
 import com.cargotracking.tracking_service.model.TrackingRecord;
 import com.cargotracking.tracking_service.model.TrackingState;
 import com.cargotracking.tracking_service.repository.TrackingStatusRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,14 +16,19 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class TrackingService {
 
     private final TrackingStatusRepository repository;
     private final TrackingCacheService trackingCacheService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ShipmentServiceClient shipmentServiceClient;
+
 
     public TrackingHistoryResponse updateStatus(String trackingNumber, TrackingState state, String location, String updatedBy) {
         LocalDateTime now = LocalDateTime.now();
+        String receiverMail = shipmentServiceClient.getRecipientEmailByTrackingNumber(trackingNumber);
+
 
         TrackingRecord record = new TrackingRecord();
         record.setShipmentId(trackingNumber);
@@ -38,7 +45,8 @@ public class TrackingService {
                 state,
                 record.getLocation(),
                 record.getUpdatedBy(),
-                now
+                now,
+                receiverMail
         );
         kafkaTemplate.send("shipment-status-events", event);
 
@@ -47,7 +55,8 @@ public class TrackingService {
                 state,
                 record.getLocation(),
                 record.getUpdatedBy(),
-                now
+                now,
+                receiverMail
         );
     }
 
@@ -94,11 +103,11 @@ public class TrackingService {
 
         LocalDateTime now = LocalDateTime.now();
         List<TrackingRecord> testRecords = Arrays.asList(
-                createTestRecord("CT" + System.currentTimeMillis() + "001", TrackingState.PICKED_UP, "İstanbul Transfer Merkezi", "system", now.minusHours(2)),
-                createTestRecord("CT" + System.currentTimeMillis() + "002", TrackingState.IN_TRANSIT, "Ankara Depo", "system", now.minusHours(1)),
-                createTestRecord("CT" + System.currentTimeMillis() + "003", TrackingState.OUT_FOR_DELIVERY, "İzmir Şubesi", "carrier_user", now.minusMinutes(30)),
-                createTestRecord("CT" + System.currentTimeMillis() + "004", TrackingState.DELIVERED, "Adana Dağıtım Merkezi", "delivery_agent", now.minusMinutes(15)),
-                createTestRecord("CT" + System.currentTimeMillis() + "005", TrackingState.IN_TRANSIT, "Bursa Transfer", "system", now.minusMinutes(45))
+                createTestRecord("CT" + System.currentTimeMillis() + "001", TrackingState.PICKED_UP, "İstanbul Transfer Merkezi", "system", now.minusHours(2),"test@gmail.com"),
+                createTestRecord("CT" + System.currentTimeMillis() + "002", TrackingState.IN_TRANSIT, "Ankara Depo", "system", now.minusHours(1),"test1@gmail.com"),
+                createTestRecord("CT" + System.currentTimeMillis() + "003", TrackingState.OUT_FOR_DELIVERY, "İzmir Şubesi", "carrier_user", now.minusMinutes(30),"test2@gmail.com"),
+                createTestRecord("CT" + System.currentTimeMillis() + "004", TrackingState.DELIVERED, "Adana Dağıtım Merkezi", "delivery_agent", now.minusMinutes(15),"test3@gmail.com"),
+                createTestRecord("CT" + System.currentTimeMillis() + "005", TrackingState.IN_TRANSIT, "Bursa Transfer", "system", now.minusMinutes(45),"test4@gmail.com")
         );
 
         List<TrackingRecord> savedRecords = repository.saveAll(testRecords);
@@ -110,7 +119,8 @@ public class TrackingService {
                     record.getStatus(),
                     record.getLocation(),
                     record.getUpdatedBy(),
-                    record.getUpdatedAt()
+                    record.getUpdatedAt(),
+                    record.getReceiverEmail()
             ));
         });
 
@@ -121,13 +131,14 @@ public class TrackingService {
         );
     }
 
-    private TrackingRecord createTestRecord(String trackingNumber, TrackingState status, String location, String updatedBy, LocalDateTime updatedAt) {
+    private TrackingRecord createTestRecord(String trackingNumber, TrackingState status, String location, String updatedBy, LocalDateTime updatedAt,String receiverEmail) {
         TrackingRecord record = new TrackingRecord();
         record.setShipmentId(trackingNumber);
         record.setStatus(status);
         record.setLocation(location);
         record.setUpdatedBy(updatedBy);
         record.setUpdatedAt(updatedAt);
+        record.setReceiverEmail(receiverEmail);
         return record;
     }
 
@@ -137,7 +148,8 @@ public class TrackingService {
                 record.getStatus(),
                 record.getLocation(),
                 record.getUpdatedBy(),
-                record.getUpdatedAt()
+                record.getUpdatedAt(),
+                record.getReceiverEmail()
         );
     }
 }

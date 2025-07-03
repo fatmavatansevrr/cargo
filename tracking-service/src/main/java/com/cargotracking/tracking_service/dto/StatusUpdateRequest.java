@@ -33,4 +33,6 @@ public class StatusUpdateRequest {
     )
     private String updatedBy;
 
+    private String recipientEmail;
+
 }

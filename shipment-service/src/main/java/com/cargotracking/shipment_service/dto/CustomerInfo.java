@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressDto {
+public class CustomerInfo {
     
     @NotBlank(message = "İsim boş olamaz")
     @Size(max = 100, message = "İsim 100 karakterden uzun olamaz")

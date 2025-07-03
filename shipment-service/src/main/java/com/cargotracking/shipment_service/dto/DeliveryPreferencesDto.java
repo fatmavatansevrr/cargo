@@ -26,7 +26,7 @@ public class DeliveryPreferencesDto {
     private String deliveryInstructions;
     
     // Alternatif teslimat adresi
-    private AddressDto alternativeAddress;
+    private CustomerInfo alternativeAddress;
     
     // İletişim tercihleri
     private Boolean smsNotification; // SMS bildirimi

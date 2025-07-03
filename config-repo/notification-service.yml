@@ -43,20 +43,19 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    username: fatma.vatansever.01@gmail.com
+    password: gcmewigjxigktdsi
     test-connection: false
-    default-encoding: UTF-8
     properties:
       mail:
         smtp:
-          auth: ${MAIL_SMTP_AUTH:true}
+          auth: true
           starttls:
-            enable: ${MAIL_STARTTLS_ENABLE:true}
+            enable: true
           ssl:
-            trust: ${MAIL_SSL_TRUST:*}
+            trust: "*"
             protocols: "TLSv1.2"
-        debug: ${MAIL_DEBUG:false}
+        debug: false
 
 springdoc:
   api-docs:

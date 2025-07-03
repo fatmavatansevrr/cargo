@@ -20,8 +20,8 @@ public class ShipmentResponse {
     private Long id;
     private String trackingNumber;
     private Long senderCustomerId;
-    private AddressDto senderAddress;
-    private AddressDto recipientAddress;
+    private CustomerInfo senderAddress;
+    private CustomerInfo recipientAddress;
     private String recipientEmail;
     private String recipientPhone;
     private PackageDto packageInfo;

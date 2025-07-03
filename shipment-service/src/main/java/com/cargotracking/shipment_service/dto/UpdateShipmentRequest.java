@@ -13,10 +13,10 @@ import lombok.Data;
 public class UpdateShipmentRequest {
     
     @Valid
-    private AddressDto senderAddress;
+    private CustomerInfo senderAddress;
     
     @Valid
-    private AddressDto recipientAddress;
+    private CustomerInfo recipientAddress;
     
     @Valid
     private PackageDto packageInfo;

@@ -1,58 +1,79 @@
+// notification-service/src/main/java/com/cargotracking/notification_service/client/ShipmentServiceClient.java
+
 package com.cargotracking.notification_service.client;
 
-import com.cargotracking.notification_service.config.ServiceClientConfig;
-import com.cargotracking.notification_service.dto.ShipmentDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+
+import java.util.Map;
 
 /**
- * Shipment service ile iletişim için client
+ * Shipment Service Client - Shipment bilgilerini almak için
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ShipmentServiceClient {
-    
+
     private final RestTemplate restTemplate;
-    private final ServiceClientConfig config;
-    
-    /**
-     * Tracking number ile shipment bilgilerini getir
-     */
-    public ShipmentDto getShipmentByTrackingNumber(String trackingNumber) {
+
+    @Value("${services.shipment-service.url:http://shipment-service:8082}")
+    private String shipmentServiceUrl;
+
+    public String getRecipientEmailByTrackingNumber(String trackingNumber) {
         try {
-            String url = config.getShipmentServiceUrl() + "/api/shipments/tracking/" + trackingNumber;
-            log.info("🔍 Shipment service'den shipment bilgisi alınıyor: {}", trackingNumber);
-            
-            ShipmentDto shipment = restTemplate.getForObject(url, ShipmentDto.class);
-            
-            if (shipment != null && shipment.isActive()) {
-                log.info("✅ Shipment bulundu: {} ({})", shipment.getTrackingNumber(), shipment.getStatus());
-                return shipment;
+            log.info("🔍 Shipment service'den recipient email alınıyor: {}", trackingNumber);
+
+            String url = shipmentServiceUrl + "/api/internal/shipments/tracking/" + trackingNumber + "/recipient-email";
+
+            String email = restTemplate.getForObject(url, String.class);
+
+            if (email != null && !email.trim().isEmpty()) {
+                log.info("✅ Recipient email bulundu: {} -> {}", trackingNumber, email);
+                return email.trim();
             } else {
-                log.warn("⚠️ Shipment bulunamadı veya aktif değil: {}", trackingNumber);
+                log.warn("⚠️ Recipient email boş: {}", trackingNumber);
                 return null;
             }
-            
+
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("⚠️ Shipment bulunamadı: {}", trackingNumber);
+            return null;
         } catch (Exception e) {
-            log.error("❌ Shipment service bağlantı hatası - Tracking: {}", trackingNumber, e);
+            log.error("❌ Recipient email alınırken hata: {} - {}", trackingNumber, e.getMessage());
             return null;
         }
     }
-    
-    /**
-     * Shipment service'in sağlık durumunu kontrol et
-     */
-    public boolean isShipmentServiceHealthy() {
+
+    public Map<String, Object> getShipmentByTrackingNumber(String trackingNumber) {
         try {
-            String url = config.getShipmentServiceUrl() + "/actuator/health";
-            String response = restTemplate.getForObject(url, String.class);
-            return response != null && response.contains("UP");
+            log.info("🔍 Shipment service'den shipment bilgileri alınıyor: {}", trackingNumber);
+
+            String url = shipmentServiceUrl + "/api/shipments/tracking/" + trackingNumber;
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> shipment = restTemplate.getForObject(url, Map.class);
+
+            if (shipment != null) {
+                log.info("✅ Shipment bilgileri bulundu: {}", trackingNumber);
+                return shipment;
+            } else {
+                log.warn("⚠️ Shipment bilgileri bulunamadı: {}", trackingNumber);
+                return null;
+            }
+
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("⚠️ Shipment bulunamadı: {}", trackingNumber);
+            return null;
         } catch (Exception e) {
-            log.error("❌ Shipment service sağlık kontrolü başarısız", e);
-            return false;
+            log.error("❌ Shipment bilgileri alınırken hata: {} - {}", trackingNumber, e.getMessage());
+            return null;
         }
     }
-} 
+}

@@ -26,4 +26,6 @@ public class TrackingRecord {
     private String updatedBy;
 
     private LocalDateTime updatedAt;
+
+    private String receiverEmail;
 }

@@ -19,7 +19,6 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,12 +61,10 @@ public class ShipmentService {
         Shipment shipment = new Shipment();
         shipment.setTrackingNumber(generateTrackingNumber());
         shipment.setSenderCustomerId(senderUserId); // Güncellenmiş alan adı
-        shipment.setSenderAddress(convertToAddressEntity(request.getSenderAddress()));
+        shipment.setSenderAddress(convertToAddressEntity(request.getSenderInfo()));
         
         // Recipient address'e iletişim bilgilerini ekle
-        Address recipientAddress = convertToAddressEntity(request.getRecipientAddress());
-        recipientAddress.setEmail(request.getRecipientEmail());
-        recipientAddress.setPhone(request.getRecipientPhone());
+        Address recipientAddress = convertToAddressEntity(request.getReceiverInfo());
         shipment.setRecipientAddress(recipientAddress);
         shipment.setPackageInfo(convertToPackageEntity(request.getPackageInfo()));
         shipment.setServiceType(request.getServiceType());
@@ -111,8 +108,10 @@ public class ShipmentService {
         // Kafka olayı yayınla - recipient iletişim bilgileri ile
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("shipment", convertToResponse(savedShipment));
-        eventData.put("recipientEmail", request.getRecipientEmail());
-        eventData.put("recipientPhone", request.getRecipientPhone());
+        eventData.put("recipientEmail", savedShipment.getRecipientAddress().getEmail());
+        eventData.put("recipientPhone", savedShipment.getRecipientAddress().getPhone());
+        eventData.put("senderAddress", convertToAddressDto(savedShipment.getSenderAddress()));
+        eventData.put("recipientAddress", convertToAddressDto(savedShipment.getRecipientAddress()));
         
         publishShipmentEvent(ShipmentEvent.created(
             savedShipment.getId(),
@@ -204,6 +203,14 @@ public class ShipmentService {
         }
         
         Shipment updatedShipment = shipmentRepository.save(shipment);
+
+        // Kafka olayı yayınla - recipient iletişim bilgileri ile
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("shipment", convertToResponse(updatedShipment));
+        eventData.put("recipientEmail", updatedShipment.getRecipientAddress().getEmail());
+        eventData.put("recipientPhone", updatedShipment.getRecipientAddress().getPhone());
+        eventData.put("senderAddress", convertToAddressDto(updatedShipment.getSenderAddress()));
+        eventData.put("recipientAddress", convertToAddressDto(updatedShipment.getRecipientAddress()));
         
         // Kafka olayı yayınla
         publishShipmentEvent(ShipmentEvent.updated(
@@ -212,7 +219,7 @@ public class ShipmentService {
             updatedShipment.getSenderCustomerId(),
             newStatus,
             previousStatus,
-            convertToResponse(updatedShipment)
+            eventData
         ));
         
         log.info("Gönderi durumu güncellendi. Takip numarası: {}, Durum: {} -> {}", 
@@ -251,6 +258,13 @@ public class ShipmentService {
 
         sendAnalyticsData(shipment);
         Shipment finalizedShipment = shipmentRepository.save(shipment);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("shipment", convertToResponse(finalizedShipment));
+        eventData.put("recipientEmail", finalizedShipment.getRecipientAddress().getEmail());
+        eventData.put("recipientPhone", finalizedShipment.getRecipientAddress().getPhone());
+        eventData.put("senderAddress", convertToAddressDto(finalizedShipment.getSenderAddress()));
+        eventData.put("recipientAddress", convertToAddressDto(finalizedShipment.getRecipientAddress()));
+
 
         publishShipmentEvent(ShipmentEvent.updated(
             finalizedShipment.getId(),
@@ -258,7 +272,7 @@ public class ShipmentService {
             finalizedShipment.getSenderCustomerId(),
             newStatus,
             previousStatus,
-            convertToResponse(finalizedShipment)
+            eventData
         ));
 
         log.info("Gönderi başarıyla sonlandırıldı (FINISHED). Takip Numarası: {}", trackingNumber);
@@ -325,7 +339,15 @@ public class ShipmentService {
         Shipment updatedShipment = shipmentRepository.save(shipment);
         
         log.info("Gönderi veritabanında güncellendi, şimdi Kafka olayı yayınlanacak...");
-        
+
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("shipment", convertToResponse(updatedShipment));
+        eventData.put("recipientEmail", updatedShipment.getRecipientAddress().getEmail());
+        eventData.put("recipientPhone", updatedShipment.getRecipientAddress().getPhone());
+        eventData.put("senderAddress", convertToAddressDto(updatedShipment.getSenderAddress()));
+        eventData.put("recipientAddress", convertToAddressDto(updatedShipment.getRecipientAddress()));
+
+
         // Kafka olayı yayınla
         publishShipmentEvent(ShipmentEvent.updated(
             updatedShipment.getId(),
@@ -333,7 +355,7 @@ public class ShipmentService {
             updatedShipment.getSenderCustomerId(),
             updatedShipment.getStatus(),
             updatedShipment.getStatus(), // Durum değişmedi, sadece bilgiler güncellendi
-            convertToResponse(updatedShipment)
+            eventData
         ));
         
         log.info("Gönderi güncellendi. Takip numarası: {}", updatedShipment.getTrackingNumber());
@@ -361,13 +383,19 @@ public class ShipmentService {
         Shipment canceledShipment = shipmentRepository.save(shipment);
         
         log.info("Gönderi veritabanında iptal edildi, şimdi Kafka olayı yayınlanacak...");
-        
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("shipment", convertToResponse(canceledShipment));
+        eventData.put("recipientEmail", canceledShipment.getRecipientAddress().getEmail());
+        eventData.put("recipientPhone", canceledShipment.getRecipientAddress().getPhone());
+        eventData.put("senderAddress", convertToAddressDto(canceledShipment.getSenderAddress()));
+        eventData.put("recipientAddress", convertToAddressDto(canceledShipment.getRecipientAddress()));
+
         // Kafka olayı yayınla
         publishShipmentEvent(ShipmentEvent.canceled(
             canceledShipment.getId(),
             canceledShipment.getTrackingNumber(),
             canceledShipment.getSenderCustomerId(),
-            convertToResponse(canceledShipment)
+            eventData
         ));
         
         log.info("Gönderi iptal edildi. Takip numarası: {}", canceledShipment.getTrackingNumber());
@@ -453,7 +481,7 @@ public class ShipmentService {
     /**
      * DTO dönüşüm metodları
      */
-    private Address convertToAddressEntity(AddressDto dto) {
+    private Address convertToAddressEntity(CustomerInfo dto) {
         Address address = new Address();
         address.setFullName(dto.getFullName());
         address.setAddressLine1(dto.getAddressLine1());
@@ -513,8 +541,8 @@ public class ShipmentService {
         return response;
     }
     
-    private AddressDto convertToAddressDto(Address address) {
-        AddressDto dto = new AddressDto();
+    private CustomerInfo convertToAddressDto(Address address) {
+        CustomerInfo dto = new CustomerInfo();
         dto.setFullName(address.getFullName());
         dto.setAddressLine1(address.getAddressLine1());
         dto.setAddressLine2(address.getAddressLine2());
@@ -594,7 +622,7 @@ public class ShipmentService {
     /**
      * EmbeddableAddress dönüşüm metodları
      */
-    private EmbeddableAddress convertToEmbeddableAddress(AddressDto dto) {
+    private EmbeddableAddress convertToEmbeddableAddress(CustomerInfo dto) {
         EmbeddableAddress address = new EmbeddableAddress();
         address.setFullName(dto.getFullName());
         address.setAddressLine1(dto.getAddressLine1());
@@ -608,8 +636,8 @@ public class ShipmentService {
         return address;
     }
     
-    private AddressDto convertFromEmbeddableAddress(EmbeddableAddress address) {
-        AddressDto dto = new AddressDto();
+    private CustomerInfo convertFromEmbeddableAddress(EmbeddableAddress address) {
+        CustomerInfo dto = new CustomerInfo();
         dto.setFullName(address.getFullName());
         dto.setAddressLine1(address.getAddressLine1());
         dto.setAddressLine2(address.getAddressLine2());
@@ -932,6 +960,68 @@ public class ShipmentService {
 
         } catch (Exception e) {
             log.error("Error sending analytics data for tracking number: {}", shipment.getTrackingNumber(), e);
+        }
+    }
+
+    // shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java
+// Bu metodları mevcut ShipmentService'e ekleyin
+
+    /**
+     * Tracking number'a göre recipient email'i döndür
+     */
+    public String getRecipientEmailByTrackingNumber(String trackingNumber) {
+        log.info("📧 Tracking number için recipient email aranıyor: {}", trackingNumber);
+
+        try {
+            Optional<Shipment> shipmentOpt = shipmentRepository.findByTrackingNumber(trackingNumber);
+
+            if (shipmentOpt.isPresent()) {
+                Shipment shipment = shipmentOpt.get();
+
+                if (shipment.getRecipientAddress() != null &&
+                        shipment.getRecipientAddress().getEmail() != null &&
+                        !shipment.getRecipientAddress().getEmail().trim().isEmpty()) {
+
+                    String email = shipment.getRecipientAddress().getEmail().trim();
+                    log.info("✅ Recipient email bulundu: {} -> {}", trackingNumber, email);
+                    return email;
+                } else {
+                    log.warn("⚠️ Recipient address'te email yok: {}", trackingNumber);
+                    return null;
+                }
+            } else {
+                log.warn("⚠️ Shipment bulunamadı: {}", trackingNumber);
+                return null;
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Recipient email aranırken hata: {} - {}", trackingNumber, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Tracking number'a göre shipment bilgilerini döndür
+     */
+    public ShipmentResponse getShipmentByTrackingNumber(String trackingNumber) {
+        log.info("🔍 Tracking number için shipment aranıyor: {}", trackingNumber);
+
+        try {
+            Optional<Shipment> shipmentOpt = shipmentRepository.findByTrackingNumber(trackingNumber);
+
+            if (shipmentOpt.isPresent()) {
+                Shipment shipment = shipmentOpt.get();
+                ShipmentResponse response = convertToResponse(shipment);
+                log.info("✅ Shipment bulundu: {}", trackingNumber);
+                return response;
+            } else {
+                log.warn("⚠️ Shipment bulunamadı: {}", trackingNumber);
+                return null;
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Shipment aranırken hata: {} - {}", trackingNumber, e.getMessage(), e);
+            return null;
         }
     }
 }

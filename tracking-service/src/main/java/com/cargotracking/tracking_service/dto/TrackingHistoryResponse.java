@@ -25,4 +25,6 @@ public class TrackingHistoryResponse {
 
     @Schema(description = "Statünün güncellendiği zaman", example = "2024-06-15T14:30:00")
     private LocalDateTime updatedAt;
+
+    private String recipientEmail;
 }

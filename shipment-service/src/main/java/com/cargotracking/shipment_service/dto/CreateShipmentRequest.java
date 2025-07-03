@@ -22,18 +22,11 @@ public class CreateShipmentRequest {
     
     @Valid
     @NotNull(message = "Gönderici adresi boş olamaz")
-    private AddressDto senderAddress;
+    private CustomerInfo senderInfo;
     
     @Valid
     @NotNull(message = "Alıcı adresi boş olamaz")
-    private AddressDto recipientAddress;
-    
-    // Alıcı iletişim bilgileri - takip numarası gönderimi için
-    @NotNull(message = "Alıcı e-posta adresi boş olamaz")
-    private String recipientEmail;
-    
-    @NotNull(message = "Alıcı telefon numarası boş olamaz")
-    private String recipientPhone;
+    private CustomerInfo receiverInfo;
     
     @Valid
     @NotNull(message = "Paket bilgileri boş olamaz")
