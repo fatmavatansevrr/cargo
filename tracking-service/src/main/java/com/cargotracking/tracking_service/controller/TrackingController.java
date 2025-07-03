@@ -34,9 +34,21 @@ public class TrackingController {
     private static final String STATUS_UPDATE_TOPIC = "status-update-topic";
 
     /**
+    // 🔽 CACHE DESTEKLİ TEK TAKİP DURUMU GETİR
+    @Operation(summary = "Tek bir takip kaydı getir", description = "Redis cache desteklidir. Cache varsa oradan, yoksa MongoDB'den döner.")
+    @GetMapping("/{trackingNumber}")
+    public ResponseEntity<TrackingHistoryResponse> getTrackingInfo(@PathVariable String trackingNumber) {
+        return trackingService.getTrackingInfo(trackingNumber)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+     */
+
+    /**
      * Takip numarasına göre takip durumu getirir
      * Roles: CUSTOMER, CARRIER, SHIPMENT_COMPANY
      */
+    /**
     @GetMapping("/{trackingNumber}")
     @PreAuthorize("hasAnyRole('CUSTOMER', 'CARRIER', 'SHIPMENT_COMPANY')")
     @Operation(summary = "Takip durumu getir", description = "Takip numarasına göre güncel gönderi durumunu getirir")
@@ -44,6 +56,17 @@ public class TrackingController {
         Optional<TrackingHistoryResponse> result = trackingService.getTrackingInfo(trackingNumber);
         return result.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
+     */
+
+
+    @GetMapping("/{trackingNumber}")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'CARRIER', 'SHIPMENT_COMPANY')")
+    @Operation(summary = "Takip durumu getir", description = "Redis cache desteklidir. Cache varsa oradan, yoksa MongoDB'den döner.")
+    public ResponseEntity<TrackingHistoryResponse> getTrackingStatus(@PathVariable String trackingNumber) {
+        Optional<TrackingHistoryResponse> result = trackingService.getTrackingInfo(trackingNumber);
+        return result.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
 
     /**
      * Kargo durumu güncelleme - sadece Carrier yetkilidir
