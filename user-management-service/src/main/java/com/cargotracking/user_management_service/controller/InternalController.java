@@ -51,6 +51,25 @@ public class InternalController {
     }
 
     /**
+     * Internal endpoint - ID ile kullanıcı getir (Microservice communication için)
+     * Authentication gerektirmez
+     */
+    @GetMapping("/users/id/{userId}")
+    @Operation(summary = "Internal - ID ile Kullanıcı", description = "ID ile kullanıcı bilgilerini getirir (Internal)")
+    public ResponseEntity<ApiResponseWrapper<UserResponse>> getUserByIdInternal(@PathVariable Long userId) {
+        try {
+            log.info("🔍 Internal getUserById isteği. User ID: {}", userId);
+            UserResponse userResponse = userService.getUserById(userId);
+            log.info("✅ Kullanıcı bulundu. ID: {}", userId);
+            return ResponseEntity.ok(new ApiResponseWrapper<>(true, userResponse, "Kullanıcı başarıyla getirildi"));
+        } catch (Exception e) {
+            log.error("❌ Kullanıcı getirilemedi. User ID: {}, Hata: {}", userId, e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponseWrapper<>(false, null, "Kullanıcı getirilemedi: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Internal endpoint - Kargo şirketlerini getir (Microservice communication için)
      * Authentication gerektirmez
      */
@@ -105,7 +124,7 @@ public class InternalController {
                 .phone(user.getPhone())
                 .address(user.getAddress())
                 .roles(user.getRoles())
-                .companyId(user.getCompanyId())
+                .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

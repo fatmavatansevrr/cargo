@@ -103,9 +103,10 @@ const RegisterPage: React.FC = () => {
                 address: data.address || '',
                 roles: [`ROLE_${selectedRole}`], // Backend için ROLE_ prefix'i ekle
                 companyId: selectedRole === 'CARRIER' ? data.companyId : undefined,
+                companyName: selectedRole === 'SHIPMENT_COMPANY' ? data.companyName : undefined,
             };
 
-            console.log('🔄 Calling register service...');
+            console.log('🔄 Calling register service with data:', registerData);
             const response = await authService.register(registerData);
 
             if (response.success) {
@@ -324,6 +325,25 @@ const RegisterPage: React.FC = () => {
                                     </div>
                                 </div>
                                 {errors.companyId && <p className="mt-2 text-sm text-red-600">{errors.companyId.message}</p>}
+                            </div>
+                        )}
+
+                        {/* Company Name for SHIPMENT_COMPANY */}
+                        {selectedRole === 'SHIPMENT_COMPANY' && (
+                            <div className="animate-slide-down">
+                                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                                    Şirket Adı
+                                </label>
+                                <input
+                                    id="companyName"
+                                    type="text"
+                                    {...register('companyName', { required: 'Şirket adı zorunludur' })}
+                                    className="mt-1 block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                                    placeholder="XYZ Kargo A.Ş."
+                                />
+                                {errors.companyName && (
+                                    <p className="mt-2 text-sm text-red-600">{errors.companyName.message}</p>
+                                )}
                             </div>
                         )}
 

@@ -16,11 +16,23 @@ import java.util.Map;
 @AllArgsConstructor
 @Schema(description = "Shipment Analytics Data")
 public class ShipmentAnalyticsDTO {
+    @Schema(description = "Unique identifier for the analytics record")
+    private String id;
+
     @Schema(description = "Shipment ID")
     private String shipmentId;
 
+    @Schema(description = "Tracking Number")
+    private String trackingNumber;
+
+    @Schema(description = "Company ID")
+    private String companyId;
+
     @Schema(description = "Carrier ID")
     private String carrierId;
+
+    @Schema(description = "Shipper ID")
+    private String shipperId;
 
     @Schema(description = "Current status of the shipment")
     private String status;

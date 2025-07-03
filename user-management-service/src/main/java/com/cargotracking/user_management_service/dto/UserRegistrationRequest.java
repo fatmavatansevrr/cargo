@@ -39,4 +39,7 @@ public class UserRegistrationRequest {
 
     // Kurye (CARRIER) kaydı için - Hangi kargo şirketine bağlı olduğunu belirtir
     private Long companyId;
+
+    // Kargo Şirketi (SHIPMENT_COMPANY) kaydı için - Şirketin adı
+    private String companyName;
 } 

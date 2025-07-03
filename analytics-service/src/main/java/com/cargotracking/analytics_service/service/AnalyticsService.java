@@ -18,11 +18,11 @@ public interface AnalyticsService {
 
     Double getAverageDeliveryDelayByCarrier(String carrierId);
 
-    Map<String, Long> getStatusDistribution();
+    Map<String, Long> getStatusDistribution(String companyId);
 
     Map<String, Double> getCarrierPerformanceMetrics(String carrierId);
 
-    List<ShipmentAnalytics> getAllAnalytics();
+    List<ShipmentAnalytics> getAllAnalytics(String companyId);
 
     void generateSampleData();
 }

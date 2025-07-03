@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './authService';
+import { User } from '../types';
 
 export interface Company {
   id: number;
@@ -11,6 +12,12 @@ export interface Company {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserResponse {
+    success: boolean;
+    data: User;
+    message: string;
 }
 
 export interface CompanyListResponse {
@@ -64,6 +71,39 @@ export const companyService = {
         data: [],
         message: 'Ağ hatası: Şirketler getirilemedi'
       };
+    }
+  },
+
+  async getUserById(userId: string): Promise<UserResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/internal/users/id/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          data: data.data,
+          message: data.message || 'Kullanıcı başarıyla getirildi'
+        };
+      } else {
+        return {
+          success: false,
+          data: {} as User,
+          message: data.message || `Kullanıcı getirilemedi (ID: ${userId})`
+        };
+      }
+    } catch (error) {
+        return {
+            success: false,
+            data: {} as User,
+            message: `Ağ hatası: Kullanıcı getirilemedi (ID: ${userId})`
+        };
     }
   }
 }; 

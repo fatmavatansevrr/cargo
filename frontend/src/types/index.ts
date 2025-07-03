@@ -25,6 +25,7 @@ export interface User {
   lastName: string;
   phone: string;
   role: UserRole;
+  companyId?: string; // Şirket kullanıcısı ise şirket ID'si
   roles?: string[]; // Backend'den gelen roles array'i
   createdAt: string;
   updatedAt: string;
@@ -105,6 +106,7 @@ export interface RegisterData {
   address?: string;
   roles: string[]; // Backend'de Set<Role> bekliyor
   companyId?: number; // Carrier role için şirket ID'si
+  companyName?: string; // SHIPMENT_COMPANY rolü için şirket adı
 }
 
 // Kargo şirketi interface'i

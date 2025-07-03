@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,22 +23,28 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/analytics")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"})
-@Tag(name = "Analytics", description = "Analytics API for cargo tracking system")
+@Tag(name = "Analytics", description = "Analytics management APIs")
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
     private final AnalyticsMapper analyticsMapper;
 
     @GetMapping
-    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
-    @Operation(summary = "Get all analytics data", description = "Retrieves all analytics data")
+    @Operation(summary = "Get all analytics data for a specific company", description = "Retrieves all analytics data for a given shipment company ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Analytics data retrieved successfully")
+            @ApiResponse(responseCode = "200", description = "Analytics data retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Company ID is missing")
     })
-    public ResponseEntity<List<ShipmentAnalyticsDTO>> getAllAnalytics() {
+    public ResponseEntity<List<ShipmentAnalyticsDTO>> getAllAnalytics(
+            @Parameter(description = "ID of the company to retrieve analytics for", required = true)
+            @RequestParam String companyId) {
+
+        if (companyId == null || companyId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(analyticsMapper.toDTOList(
-                analyticsService.getAllAnalytics()
+                analyticsService.getAllAnalytics(companyId)
         ));
     }
 
@@ -118,7 +123,6 @@ public class AnalyticsController {
     }
 
     @GetMapping("/carrier/{carrierId}/performance")
-    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
     @Operation(summary = "Get carrier performance metrics", description = "Retrieves detailed performance metrics for a specific carrier")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Performance metrics retrieved successfully",
@@ -135,15 +139,17 @@ public class AnalyticsController {
     }
 
     @GetMapping("/status-distribution")
-    @PreAuthorize("hasRole('SHIPMENT_COMPANY')")
     @Operation(summary = "Get shipment status distribution", description = "Retrieves the distribution of shipment statuses across all shipments")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Status distribution retrieved successfully",
                     content = @Content(schema = @Schema(implementation = StatusDistributionDTO.class)))
     })
     public ResponseEntity<StatusDistributionDTO> getStatusDistribution() {
+        // Hardcoded for testing without security
+        String companyId = "6a541a21-81b0-493d-915f-33a395245811";
+
         return ResponseEntity.ok(analyticsMapper.toStatusDistributionDTO(
-                analyticsService.getAllAnalytics()
+                analyticsService.getAllAnalytics(companyId)
         ));
     }
 

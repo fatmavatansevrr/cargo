@@ -22,6 +22,12 @@ server:
   error:
     include-message: always
 
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: ${JWT_ISSUER_URI:http://user-management-service:8081}
+
 # For JWT generation and validation
 jwt:
   secret: MySecretKeyForJWTSigningMustBeAtLeast256BitsLongForSecurityReasons123456789

@@ -10,7 +10,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: postgres
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
     ports:
       - "5433:5432"
@@ -160,7 +160,7 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/user_management_db
       - DB_USERNAME=postgres
-      - DB_PASSWORD=1234
+      - DB_PASSWORD=postgres
       - EUREKA_URL=http://eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888  # ✅ Bu satır eksikti
       - SPRING_PROFILES_ACTIVE=docker
@@ -184,7 +184,7 @@ services:
     environment:
       - DB_URL=jdbc:postgresql://postgres:5432/shipment_db
       - DB_USERNAME=postgres
-      - DB_PASSWORD=1234
+      - DB_PASSWORD=postgres
       - EUREKA_URL=http://eureka-server:8761/eureka/
       - CONFIG_SERVER_URL=http://config-server:8888
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
@@ -269,21 +269,26 @@ services:
 
   analytics-service:
     build: ./analytics-service
-    ports:
-      - "8085:8085"
     depends_on:
       config-server:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-      postgres:
+      mongodb:
         condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - cargo-tracking-network
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - CONFIG_SERVER_URL=http://config-server:8888
       - EUREKA_URL=http://eureka-server:8761/eureka/
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/analytics_db
+      - REDIS_HOST=redis
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    ports:
+      - "8085:8085"
 
 # Volumes
 volumes:

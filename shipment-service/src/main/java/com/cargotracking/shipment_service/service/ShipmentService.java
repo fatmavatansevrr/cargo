@@ -8,13 +8,16 @@ import com.cargotracking.shipment_service.repository.ShipmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +39,10 @@ public class ShipmentService {
     
     private final ShipmentRepository shipmentRepository;
     private final UserServiceClient userServiceClient;
+    private final RestTemplate restTemplate;
+    
+    @Value("${app.analytics-service.url}")
+    private String analyticsServiceUrl;
     
     @Autowired(required = false) // Kafka yoksa hata vermesin
     private KafkaTemplate<String, Object> kafkaTemplate;
@@ -190,9 +197,10 @@ public class ShipmentService {
         shipment.setStatus(newStatus);
         shipment.setUpdatedBy(updatedBy);
         
-        // Teslim edildi ise gerçek teslimat tarihini set et
+        // Teslim edildi ise gerçek teslimat tarihini set et ve analiz verisi gönder
         if (newStatus == Shipment.ShipmentStatus.FINISHED) {
             shipment.setActualDeliveryDate(LocalDateTime.now());
+            sendAnalyticsData(shipment);
         }
         
         Shipment updatedShipment = shipmentRepository.save(shipment);
@@ -211,6 +219,49 @@ public class ShipmentService {
                 updatedShipment.getTrackingNumber(), previousStatus, newStatus);
         
         return convertToResponse(updatedShipment);
+    }
+    
+    /**
+     * Kafka event'i ile gelen 'teslim edildi' bilgisine göre gönderiyi sonlandırır.
+     * Bu metot, tracking-service'den gelen DELIVERED durumu üzerine tetiklenir.
+     */
+    @Transactional
+    public void finalizeShipment(String trackingNumber) {
+        log.info("Gönderi sonlandırma işlemi başlatıldı. Takip Numarası: {}", trackingNumber);
+
+        Shipment shipment = shipmentRepository.findByTrackingNumber(trackingNumber)
+                .orElseThrow(() -> new RuntimeException("Takip numarasına sahip gönderi bulunamadı: " + trackingNumber));
+
+        Shipment.ShipmentStatus previousStatus = shipment.getStatus();
+        Shipment.ShipmentStatus newStatus = Shipment.ShipmentStatus.FINISHED;
+
+        if (previousStatus == newStatus) {
+            log.warn("Gönderi zaten {} durumunda. İşlem yapılmayacak. Takip Numarası: {}", newStatus, trackingNumber);
+            return;
+        }
+
+        if (!previousStatus.canTransitionTo(newStatus)) {
+            log.error("Geçersiz durum geçişi denemesi: {} -> {}. Takip Numarası: {}", previousStatus, newStatus, trackingNumber);
+            throw new IllegalStateException("Geçersiz durum geçişi: " + previousStatus + " -> " + newStatus);
+        }
+
+        shipment.setStatus(newStatus);
+        shipment.setActualDeliveryDate(LocalDateTime.now());
+        shipment.setUpdatedBy(0L); // 0L -> SİSTEM kullanıcısı
+
+        sendAnalyticsData(shipment);
+        Shipment finalizedShipment = shipmentRepository.save(shipment);
+
+        publishShipmentEvent(ShipmentEvent.updated(
+            finalizedShipment.getId(),
+            finalizedShipment.getTrackingNumber(),
+            finalizedShipment.getSenderCustomerId(),
+            newStatus,
+            previousStatus,
+            convertToResponse(finalizedShipment)
+        ));
+
+        log.info("Gönderi başarıyla sonlandırıldı (FINISHED). Takip Numarası: {}", trackingNumber);
     }
     
     /**
@@ -794,48 +845,93 @@ public class ShipmentService {
      * Aynı sayıda kargo olan carrier'lar varsa random seçer
      * Synchronized - Race condition'ı önlemek için
      */
-    private synchronized Long assignCarrierAutomatically(Long shipmentCompanyId) {
-        log.info("Kargo şirketi için uygun carrier aranıyor. Şirket ID: {}", shipmentCompanyId);
-
-        // User service'i çağırarak ilgili şirketteki tüm carrier'ları al
-        UserServiceClient.ApiResponseWrapper<List<UserServiceClient.UserDto>> response =
-                userServiceClient.getCompanyCarriers(shipmentCompanyId);
-
-        if (!response.isSuccess() || response.getData() == null || response.getData().isEmpty()) {
-            log.warn("Bu kargo şirketine atanmış aktif carrier bulunamadı. Şirket ID: {}", shipmentCompanyId);
+    private synchronized Long assignCarrierAutomatically(Long shipmentCompanyUserId) {
+        if (shipmentCompanyUserId == null) {
+            log.error("❌ Carrier ataması için şirket kullanıcısının ID'si null olamaz.");
             return null;
         }
 
-        List<UserServiceClient.UserDto> carriers = response.getData();
-        log.info("{} kargo şirketi için {} adet carrier bulundu.", shipmentCompanyId, carriers.size());
+        try {
+            // 1. Adım: Gelen ID ile şirket kullanıcısının bilgilerini al.
+            log.info("📞 User-management-service çağrılıyor. Şirket Kullanıcı ID: {}", shipmentCompanyUserId);
+            UserServiceClient.ApiResponseWrapper<UserServiceClient.UserDto> userResponseWrapper = userServiceClient.getUserById(shipmentCompanyUserId);
 
-        // En az gönderiye sahip olan carrier'ları bul
-        List<Long> bestCarriers = new ArrayList<>();
-        long minShipments = Long.MAX_VALUE;
-
-        for (UserServiceClient.UserDto carrier : carriers) {
-            long assignedShipments = shipmentRepository.countByAssignedCarrierIdAndStatus(
-                    carrier.getId(),
-                    Shipment.ShipmentStatus.ACTIVE
-            );
-            log.info("Carrier ID: {} için bulunan atanmış kargo sayısı: {}", carrier.getId(), assignedShipments);
-
-            if (assignedShipments < minShipments) {
-                minShipments = assignedShipments;
-                bestCarriers.clear();
-                bestCarriers.add(carrier.getId());
-            } else if (assignedShipments == minShipments) {
-                bestCarriers.add(carrier.getId());
+            if (userResponseWrapper == null || !userResponseWrapper.isSuccess() || userResponseWrapper.getData() == null) {
+                log.warn("⚠️ Şirket kullanıcısı bilgileri alınamadı. Kullanıcı ID: {}", shipmentCompanyUserId);
+                return null;
             }
+
+            UserServiceClient.UserDto companyUser = userResponseWrapper.getData();
+            Long actualCompanyId = companyUser.getCompanyId();
+
+            if (actualCompanyId == null) {
+                log.warn("⚠️ Kullanıcının bir şirketi bulunmuyor. Kullanıcı ID: {}", shipmentCompanyUserId);
+                return null;
+            }
+
+            // 2. Adım: Alınan gerçek şirket ID'si ile o şirketin kuryelerini getir.
+            log.info("📞 User-management-service çağrılıyor. Gerçek Şirket ID: {}", actualCompanyId);
+            UserServiceClient.ApiResponseWrapper<List<UserServiceClient.UserDto>> carriersResponseWrapper = userServiceClient.getCompanyCarriers(actualCompanyId);
+
+            if (carriersResponseWrapper != null && carriersResponseWrapper.isSuccess() && carriersResponseWrapper.getData() != null && !carriersResponseWrapper.getData().isEmpty()) {
+                List<UserServiceClient.UserDto> carriers = carriersResponseWrapper.getData();
+                log.info("✅ {} şirketine ait {} adet carrier bulundu.", actualCompanyId, carriers.size());
+
+                // Rastgele bir carrier seç
+                UserServiceClient.UserDto chosenCarrier = carriers.get(random.nextInt(carriers.size()));
+                log.info("Seçilen carrier: ID {}", chosenCarrier.getId());
+
+                return chosenCarrier.getId();
+            } else {
+                String reason = (carriersResponseWrapper == null) ? "null response" :
+                                !carriersResponseWrapper.isSuccess() ? "başarısız yanıt" :
+                                "boş data";
+                log.warn("⚠️ {} şirketi için uygun carrier bulunamadı. Sebep: {}", actualCompanyId, reason);
+                if (carriersResponseWrapper != null && !carriersResponseWrapper.isSuccess()) {
+                    log.warn("Hata mesajı: {}", carriersResponseWrapper.getMessage());
+                }
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("❌ Carrier'ları getirirken hata oluştu. Şirket Kullanıcı ID: {}. Hata: {}", shipmentCompanyUserId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Analiz servisine veri gönderme
+     * Bu metot, gönderi tamamlandığında tetiklenir.
+     */
+    private void sendAnalyticsData(Shipment shipment) {
+        if (kafkaTemplate == null) {
+            log.warn("KafkaTemplate is not available. Skipping sending analytics data.");
+            return;
         }
 
-        if (!bestCarriers.isEmpty()) {
-            Long chosenCarrierId = bestCarriers.get(random.nextInt(bestCarriers.size()));
-            log.info("En uygun carrier'lar arasından rastgele seçildi. Carrier ID: {}, Atanmış kargo sayısı: {}", chosenCarrierId, minShipments);
-            return chosenCarrierId;
-        } else {
-            log.warn("Uygun carrier bulunamadı. Şirket ID: {}", shipmentCompanyId);
-            return null;
+        log.info("Sending analytics data for tracking number: {}", shipment.getTrackingNumber());
+        try {
+            AnalyticsDataEvent analyticsDataEvent = AnalyticsDataEvent.builder()
+                .shipmentId(shipment.getId().toString())
+                .trackingNumber(shipment.getTrackingNumber())
+                .companyId(String.valueOf(shipment.getShipmentCompanyId()))
+                .carrierId(shipment.getAssignedCarrierId() != null ? shipment.getAssignedCarrierId().toString() : "N/A")
+                .shipperId(shipment.getSenderCustomerId().toString())
+                .status(shipment.getStatus().name())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+            if (shipment.getEstimatedDeliveryDate() != null && shipment.getActualDeliveryDate() != null) {
+                Duration deliveryDuration = Duration.between(shipment.getEstimatedDeliveryDate(), shipment.getActualDeliveryDate());
+                analyticsDataEvent.setDeliveryDelayHours((int) deliveryDuration.toHours());
+            } else {
+                analyticsDataEvent.setDeliveryDelayHours(0);
+            }
+
+            kafkaTemplate.send("analytics-topic", analyticsDataEvent);
+            log.info("Successfully sent analytics data for tracking number: {}", shipment.getTrackingNumber());
+
+        } catch (Exception e) {
+            log.error("Error sending analytics data for tracking number: {}", shipment.getTrackingNumber(), e);
         }
     }
 }

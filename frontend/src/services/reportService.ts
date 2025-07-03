@@ -73,22 +73,28 @@ class ReportService {
         }
     }
 
-    // Get all analytics data
-    async getAllAnalytics(): Promise<ShipmentAnalytics[]> {
+    // Get all analytics data for a specific company
+    async getAllAnalytics(companyId: string): Promise<ShipmentAnalytics[]> {
+        if (!companyId) {
+            console.error('❌ Company ID is required for getAllAnalytics');
+            return []; // or throw new Error('Company ID is required');
+        }
         try {
-            console.log('🔍 Analytics API isteği gönderiliyor:', `${API_BASE_URL}/api/v1/analytics`);
-            const response = await axios.get(`${API_BASE_URL}/api/v1/analytics`, this.getAuthHeaders());
+            const url = `${API_BASE_URL}/api/v1/analytics?companyId=${companyId}`;
+            console.log('🔍 Analytics API isteği gönderiliyor:', url);
+            const response = await axios.get(url, this.getAuthHeaders());
             console.log('✅ Analytics verisi alındı:', response.data);
             return response.data;
         } catch (error: any) {
+            const url = `${API_BASE_URL}/api/v1/analytics?companyId=${companyId}`;
             console.error('❌ Analytics error:', {
                 message: error.message,
                 status: error.response?.status,
                 statusText: error.response?.statusText,
                 data: error.response?.data,
-                url: `${API_BASE_URL}/api/v1/analytics`
+                url: url
             });
-            throw new Error(`Analytics API hatası: ${error.response?.status} - ${error.message}`);
+            throw new Error(`Analytics API hatası: ${error.response?.data?.message || error.message}`);
         }
     }
 

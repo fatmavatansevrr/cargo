@@ -33,6 +33,12 @@ public interface UserServiceClient {
     ApiResponseWrapper<UserDto> getUserByUsername(@PathVariable("username") String username);
 
     /**
+     * ID ile kullanıcı bilgilerini getirir (Internal endpoint)
+     */
+    @GetMapping("/api/admin/internal/users/id/{userId}")
+    ApiResponseWrapper<UserDto> getUserById(@PathVariable("userId") Long userId);
+
+    /**
      * API Response wrapper class
      */
     class ApiResponseWrapper<T> {

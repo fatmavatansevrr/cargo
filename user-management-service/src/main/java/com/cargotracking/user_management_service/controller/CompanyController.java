@@ -113,7 +113,7 @@ public class CompanyController {
                 .phone(user.getPhone())
                 .address(user.getAddress())
                 .roles(user.getRoles())
-                .companyId(user.getCompanyId())
+                .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

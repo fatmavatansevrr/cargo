@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import reportService, { ShipmentAnalytics, CarrierPerformance, StatusDistribution } from '../services/reportService';
+import { companyService } from '../services/companyService';
+import { useAuth } from '../context/AuthContext';
 import './ReportsPage.css';
 
 interface ReportsPageProps {}
@@ -9,6 +11,7 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
     const [analytics, setAnalytics] = useState<ShipmentAnalytics[]>([]);
     const [statusDistribution, setStatusDistribution] = useState<StatusDistribution | null>(null);
     const [carrierPerformances, setCarrierPerformances] = useState<Record<string, CarrierPerformance>>({});
+    const [carrierNames, setCarrierNames] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCarrier, setSelectedCarrier] = useState<string>('');
@@ -16,18 +19,27 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
         startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0]
     });
+    const { user } = useAuth();
 
     useEffect(() => {
-        loadReportData();
-    }, []);
+        if (user?.id) {
+            loadReportData(user.id);
+        }
+    }, [user]);
 
-    const loadReportData = async () => {
+    const loadReportData = async (companyId: string) => {
+        if (!companyId) {
+            setError("Şirket kimliği bulunamadı. Raporlar yüklenemiyor.");
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError(null);
 
-            // Load all analytics data
-            const analyticsData = await reportService.getAllAnalytics();
+            // Load all analytics data for the specific company
+            const analyticsData = await reportService.getAllAnalytics(companyId);
             setAnalytics(analyticsData);
 
             // Load status distribution
@@ -37,16 +49,26 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
             // Load carrier performances for unique carriers
             const uniqueCarriers = Array.from(new Set(analyticsData.map(a => a.carrierId)));
             const performances: Record<string, CarrierPerformance> = {};
+            const names: Record<string, string> = {};
 
             for (const carrierId of uniqueCarriers) {
                 try {
                     const performance = await reportService.getCarrierPerformance(carrierId);
                     performances[carrierId] = performance;
+
+                    const userResponse = await companyService.getUserById(carrierId);
+                    if (userResponse.success) {
+                        names[carrierId] = userResponse.data.firstName + ' ' + userResponse.data.lastName;
+                    } else {
+                        names[carrierId] = `Taşıyıcı ${carrierId}`;
+                    }
                 } catch (err) {
-                    console.warn(`Could not load performance for carrier ${carrierId}`);
+                    console.warn(`Could not load performance or name for carrier ${carrierId}`);
+                    names[carrierId] = `Taşıyıcı ${carrierId}`;
                 }
             }
             setCarrierPerformances(performances);
+            setCarrierNames(names);
 
         } catch (err) {
             setError('Rapor verileri yüklenirken hata oluştu');
@@ -63,7 +85,9 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
             console.log('🔄 Örnek veri oluşturuluyor...');
             await reportService.generateSampleData();
             console.log('✅ Örnek veri başarıyla oluşturuldu, veriler yeniden yükleniyor...');
-            await loadReportData();
+            if (user?.id) {
+                await loadReportData(user.id);
+            }
         } catch (err: any) {
             console.error('❌ Sample data generation error:', err);
             const errorMessage = err.message || 'Bilinmeyen hata oluştu';
@@ -90,7 +114,9 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
 
     const handleCarrierFilter = async () => {
         if (!selectedCarrier) {
-            loadReportData();
+            if (user?.id) {
+                loadReportData(user.id);
+            }
             return;
         }
 
@@ -108,12 +134,8 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
     // Calculate summary statistics
     const summaryStats = {
         totalShipments: analytics.length,
-        totalRevenue: analytics.reduce((sum, a) => sum + a.totalRevenue, 0),
         averageDeliveryTime: analytics.length > 0
             ? analytics.reduce((sum, a) => sum + a.averageDeliveryTime, 0) / analytics.length
-            : 0,
-        averageCustomerSatisfaction: analytics.length > 0
-            ? analytics.reduce((sum, a) => sum + a.customerSatisfaction, 0) / analytics.length
             : 0
     };
 
@@ -160,7 +182,7 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                         </button>
                         <button
                             className="btn btn-secondary"
-                            onClick={loadReportData}
+                            onClick={() => user?.id && loadReportData(user.id)}
                             disabled={loading}
                         >
                             🔄 Verileri Yenile
@@ -204,7 +226,7 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                                 <option value="">Tüm Taşıyıcılar</option>
                                 {uniqueCarriers.map(carrier => (
                                     <option key={carrier} value={carrier}>
-                                        {carrier}
+                                        {carrierNames[carrier] || carrier}
                                     </option>
                                 ))}
                             </select>
@@ -227,24 +249,10 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                             </div>
                         </div>
                         <div className="summary-card">
-                            <div className="card-icon">💰</div>
-                            <div className="card-content">
-                                <h3>Toplam Gelir</h3>
-                                <p className="card-value">₺{summaryStats.totalRevenue.toFixed(2)}</p>
-                            </div>
-                        </div>
-                        <div className="summary-card">
                             <div className="card-icon">⏱️</div>
                             <div className="card-content">
                                 <h3>Ortalama Teslimat Süresi</h3>
                                 <p className="card-value">{summaryStats.averageDeliveryTime.toFixed(1)} saat</p>
-                            </div>
-                        </div>
-                        <div className="summary-card">
-                            <div className="card-icon">⭐</div>
-                            <div className="card-content">
-                                <h3>Müşteri Memnuniyeti</h3>
-                                <p className="card-value">{summaryStats.averageCustomerSatisfaction.toFixed(1)}/5</p>
                             </div>
                         </div>
                     </div>
@@ -285,7 +293,7 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                         <div className="carrier-grid">
                             {Object.entries(carrierPerformances).map(([carrierId, performance]) => (
                                 <div key={carrierId} className="carrier-card">
-                                    <h3>{carrierId}</h3>
+                                    <h3>{carrierNames[carrierId] || carrierId}</h3>
                                     <div className="carrier-metrics">
                                         <div className="metric">
                                             <span className="metric-label">Toplam Gönderi:</span>
@@ -298,14 +306,6 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                                         <div className="metric">
                                             <span className="metric-label">Ortalama Teslimat:</span>
                                             <span className="metric-value">{performance.averageDeliveryTime.toFixed(1)} saat</span>
-                                        </div>
-                                        <div className="metric">
-                                            <span className="metric-label">Memnuniyet:</span>
-                                            <span className="metric-value">{performance.satisfactionRating.toFixed(1)}/5</span>
-                                        </div>
-                                        <div className="metric">
-                                            <span className="metric-label">Toplam Gelir:</span>
-                                            <span className="metric-value">₺{performance.totalRevenue.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -324,10 +324,8 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                                 <th>Gönderi ID</th>
                                 <th>Taşıyıcı</th>
                                 <th>Durum</th>
-                                <th>Gelir</th>
                                 <th>Teslimat Süresi</th>
                                 <th>Gecikme</th>
-                                <th>Memnuniyet</th>
                                 <th>Tarih</th>
                             </tr>
                             </thead>
@@ -335,7 +333,7 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                             {analytics.slice(0, 10).map((item) => (
                                 <tr key={item.shipmentId}>
                                     <td>{item.shipmentId}</td>
-                                    <td>{item.carrierId}</td>
+                                    <td>{carrierNames[item.carrierId] || item.carrierId}</td>
                                     <td>
                                             <span
                                                 className="status-badge"
@@ -350,14 +348,12 @@ const ReportsPage: React.FC<ReportsPageProps> = () => {
                                                 {item.status}
                                             </span>
                                     </td>
-                                    <td>₺{item.totalRevenue.toFixed(2)}</td>
                                     <td>{item.averageDeliveryTime.toFixed(1)} saat</td>
                                     <td>
                                             <span className={item.deliveryDelayHours > 0 ? 'delay-positive' : 'delay-negative'}>
                                                 {item.deliveryDelayHours > 0 ? '+' : ''}{item.deliveryDelayHours} saat
                                             </span>
                                     </td>
-                                    <td>{item.customerSatisfaction.toFixed(1)}/5</td>
                                     <td>{new Date(item.timestamp).toLocaleDateString('tr-TR')}</td>
                                 </tr>
                             ))}

@@ -1,12 +1,12 @@
 package com.cargotracking.analytics_service.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,15 +14,16 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "shipment_analytics")
+@Document(collection = "shipment_analytics")
 public class ShipmentAnalytics {
     @Id
     private String id;
     private String shipmentId;
+    private String trackingNumber;
     private String status;
     private LocalDateTime statusTimestamp;
     private String carrierId;
+    private String companyId;
     private String shipperId;
     private String customerId;
     private String originLocation;

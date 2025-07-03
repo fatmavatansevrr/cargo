@@ -3,9 +3,8 @@ package com.cargotracking.analytics_service.mapper;
 import com.cargotracking.analytics_service.dto.CarrierPerformanceDTO;
 import com.cargotracking.analytics_service.dto.ShipmentAnalyticsDTO;
 import com.cargotracking.analytics_service.dto.StatusDistributionDTO;
+import com.cargotracking.analytics_service.dto.AnalyticsDataEvent;
 import com.cargotracking.analytics_service.model.ShipmentAnalytics;
-import com.cargotracking.analytics_service.service.impl.AnalyticsServiceImpl;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -17,10 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class AnalyticsMapper {
-
-    private final AnalyticsServiceImpl analyticsService;
 
     public ShipmentAnalyticsDTO toDTO(ShipmentAnalytics analytics) {
         if (analytics == null) {
@@ -47,8 +43,12 @@ public class AnalyticsMapper {
         }
 
         return ShipmentAnalyticsDTO.builder()
+                .id(analytics.getId())
                 .shipmentId(analytics.getShipmentId())
+                .trackingNumber(analytics.getTrackingNumber())
+                .companyId(analytics.getCompanyId())
                 .carrierId(analytics.getCarrierId())
+                .shipperId(analytics.getShipperId())
                 .status(analytics.getStatus())
                 .totalShipments(analytics.getTotalShipments() != null ? analytics.getTotalShipments() : 1L)
                 .totalRevenue(analytics.getTotalRevenue() != null ? analytics.getTotalRevenue() : BigDecimal.ZERO)
@@ -61,29 +61,48 @@ public class AnalyticsMapper {
     }
 
     public ShipmentAnalytics toEntity(ShipmentAnalyticsDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        ShipmentAnalytics analytics = new ShipmentAnalytics();
-        analytics.setId(dto.getShipmentId()); // Using shipmentId as the entity ID
-        analytics.setShipmentId(dto.getShipmentId());
-        analytics.setCarrierId(dto.getCarrierId());
-        analytics.setStatus(dto.getStatus());
-        analytics.setDeliveryDelayHours(dto.getDeliveryDelayHours());
-        analytics.setStatusTimestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now());
-        analytics.setTotalShipments(dto.getTotalShipments());
-        analytics.setTotalRevenue(dto.getTotalRevenue());
-        analytics.setAverageDeliveryTime(dto.getAverageDeliveryTime());
-        analytics.setCustomerSatisfaction(dto.getCustomerSatisfaction());
-        analytics.setTimestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now());
-        return analytics;
+        if (dto == null) return null;
+        return ShipmentAnalytics.builder()
+                .id(dto.getId())
+                .shipmentId(dto.getShipmentId())
+                .trackingNumber(dto.getTrackingNumber())
+                .companyId(dto.getCompanyId())
+                .carrierId(dto.getCarrierId())
+                .shipperId(dto.getShipperId())
+                .status(dto.getStatus())
+                .deliveryDelayHours(dto.getDeliveryDelayHours())
+                .statusTimestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now())
+                .totalShipments(dto.getTotalShipments())
+                .totalRevenue(dto.getTotalRevenue())
+                .averageDeliveryTime(dto.getAverageDeliveryTime())
+                .customerSatisfaction(dto.getCustomerSatisfaction())
+                .timestamp(dto.getTimestamp() != null ? dto.getTimestamp() : LocalDateTime.now())
+                .build();
     }
 
     public List<ShipmentAnalyticsDTO> toDTOList(List<ShipmentAnalytics> analytics) {
         return analytics.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    public ShipmentAnalytics toEntity(AnalyticsDataEvent event) {
+        if (event == null) return null;
+        return ShipmentAnalytics.builder()
+                .shipmentId(event.getShipmentId())
+                .trackingNumber(event.getTrackingNumber())
+                .companyId(event.getCompanyId())
+                .carrierId(event.getCarrierId())
+                .shipperId(event.getShipperId())
+                .status(event.getStatus())
+                .statusTimestamp(event.getTimestamp() != null ? event.getTimestamp() : LocalDateTime.now())
+                .totalShipments(event.getTotalShipments())
+                .totalRevenue(event.getTotalRevenue())
+                .averageDeliveryTime(event.getAverageDeliveryTime())
+                .customerSatisfaction(event.getCustomerSatisfaction())
+                .deliveryDelayHours(event.getDeliveryDelayHours())
+                .timestamp(event.getTimestamp() != null ? event.getTimestamp() : LocalDateTime.now())
+                .build();
     }
 
     public CarrierPerformanceDTO toCarrierPerformanceDTO(String carrierId, List<ShipmentAnalytics> analytics) {

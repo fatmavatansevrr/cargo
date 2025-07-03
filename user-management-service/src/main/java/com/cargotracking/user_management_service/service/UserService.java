@@ -3,9 +3,11 @@ package com.cargotracking.user_management_service.service;
 import com.cargotracking.user_management_service.dto.ProfileUpdateRequest;
 import com.cargotracking.user_management_service.dto.UserRegistrationRequest;
 import com.cargotracking.user_management_service.dto.UserResponse;
+import com.cargotracking.user_management_service.model.Company;
 import com.cargotracking.user_management_service.model.Role;
 import com.cargotracking.user_management_service.model.User;
 import com.cargotracking.user_management_service.repository.UserRepository;
+import com.cargotracking.user_management_service.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +31,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CompanyService companyService;
+    private final CompanyRepository companyRepository;
 
     /**
      * Kullanıcı kaydı - FR-UM-001
@@ -58,7 +62,7 @@ public class UserService {
                 })
                 .collect(Collectors.toSet());
 
-        User user = User.builder()
+        User.UserBuilder userBuilder = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -67,11 +71,46 @@ public class UserService {
                 .phone(request.getPhone())
                 .address(request.getAddress())
                 .roles(roleSet)
-                .companyId(request.getCompanyId())
-                .isActive(true)
-                .build();
+                .isActive(true);
 
-        User savedUser = userRepository.save(user);
+        // Şirket ataması
+        if (roleSet.contains(Role.SHIPMENT_COMPANY)) {
+            // Yeni bir şirket oluştur ve kullanıcıya ata
+            if (request.getCompanyName() == null || request.getCompanyName().isBlank()) {
+                throw new RuntimeException("Şirket adı zorunludur.");
+            }
+            Company newCompany = companyService.createCompany(request.getCompanyName());
+            userBuilder.company(newCompany);
+
+        } else if (roleSet.contains(Role.CARRIER)) {
+            // Var olan bir şirkete ata
+            if (request.getCompanyId() == null) {
+                throw new RuntimeException("Taşıyıcı için şirket kimliği zorunludur.");
+            }
+            
+            // Frontend'den gelen companyId aslında kargo şirketini temsil eden kullanıcının ID'sidir.
+            // Bu kullanıcıyı bulup, onun şirketini almalıyız.
+            User companyUser = userRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Şirket temsilcisi kullanıcı bulunamadı: " + request.getCompanyId()));
+
+            Company existingCompany = companyUser.getCompany();
+            if (existingCompany == null) {
+                // Bu durum, SHIPMENT_COMPANY rolüne sahip olmayan bir kullanıcının ID'si gönderildiğinde oluşabilir.
+                throw new RuntimeException("Seçilen kullanıcı bir şirkete bağlı değil: " + companyUser.getUsername());
+            }
+            
+            userBuilder.company(existingCompany);
+        }
+
+        User savedUser = userRepository.saveAndFlush(userBuilder.build());
+        
+        // Eğer kullanıcı bir şirket yöneticisi ise, oluşturulan companyId'yi kullanıcıya geri ata
+        if (roleSet.contains(Role.SHIPMENT_COMPANY) && savedUser.getCompany() != null) {
+            savedUser.setCompany(savedUser.getCompany()); // Zaten atanmış ama yine de emin olalım.
+            // Önemli: Aslında burada kullanıcının kendisini de company'nin bir çalışanı olarak eklemek daha doğru olur.
+            // Company entity'sinde bir employee listesi varsa bu yapılabilir.
+        }
+
         return mapToUserResponse(savedUser);
     }
 
@@ -275,7 +314,7 @@ public class UserService {
                 .phone(user.getPhone())
                 .address(user.getAddress())
                 .roles(user.getRoles())
-                .companyId(user.getCompanyId())
+                .companyId(user.getCompany() != null ? user.getCompany().getId() : null)
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

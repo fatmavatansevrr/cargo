@@ -17,5 +17,32 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+    consumer:
+      group-id: shipment-service
+      auto-offset-reset: earliest
+      properties:
+        spring:
+          json:
+            use:
+              type:
+                headers: false
+            value:
+              default:
+                type: com.cargotracking.shipment_service.dto.StatusChangedEvent
+
 server:
   port: 8082
+
+app:
+  kafka:
+    enabled: true
+  user-service:
+    url: http://user-management-service
+  analytics-service:
+    url: http://analytics-service
+
+#eureka:
+#  client:
+#    serviceUrl:
