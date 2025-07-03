@@ -43,6 +43,21 @@ public class UserService {
             throw new RuntimeException("Bu email adresi zaten kullanılıyor");
         }
 
+        // String role listesini Role enum setine çevir
+        Set<Role> roleSet = request.getRoles().stream()
+                .map(roleString -> {
+                    try {
+                        // ROLE_ prefix'i varsa kaldır
+                        String cleanRole = roleString.toUpperCase().startsWith("ROLE_") 
+                            ? roleString.substring(5) 
+                            : roleString;
+                        return Role.valueOf(cleanRole.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        throw new RuntimeException("Geçersiz rol: " + roleString);
+                    }
+                })
+                .collect(Collectors.toSet());
+
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -51,7 +66,7 @@ public class UserService {
                 .lastName(request.getLastName())
                 .phone(request.getPhone())
                 .address(request.getAddress())
-                .roles(request.getRoles())
+                .roles(roleSet)
                 .companyId(request.getCompanyId())
                 .isActive(true)
                 .build();

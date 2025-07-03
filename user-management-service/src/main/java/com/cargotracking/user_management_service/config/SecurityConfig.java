@@ -46,6 +46,7 @@ public class SecurityConfig {
                 // Public endpoint'ler - Authentication gerektirmeyen
                 .requestMatchers(
                     "/api/auth/**",           // Authentication endpoint'leri
+                    "/api/companies/public",  // Public şirket listesi (kayıt için)
                     "/api/admin/internal/**", // Internal microservice endpoint'leri
                     "/v3/api-docs/**",        // OpenAPI docs
                     "/v3/api-docs",           // OpenAPI docs (without trailing slash)

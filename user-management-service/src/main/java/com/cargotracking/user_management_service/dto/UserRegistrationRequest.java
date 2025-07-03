@@ -1,10 +1,9 @@
 package com.cargotracking.user_management_service.dto;
 
-import com.cargotracking.user_management_service.model.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * User registration request DTO - Requirements FR-UM-001
@@ -36,7 +35,7 @@ public class UserRegistrationRequest {
     private String address;
 
     @NotEmpty(message = "En az bir rol seçilmelidir")
-    private Set<Role> roles;
+    private List<String> roles;
 
     // Kurye (CARRIER) kaydı için - Hangi kargo şirketine bağlı olduğunu belirtir
     private Long companyId;

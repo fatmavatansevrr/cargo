@@ -32,6 +32,31 @@ public class CompanyController {
     private final UserService userService;
 
     /**
+     * Tüm aktif kargo şirketlerini getir (Public - Kayıt için)
+     * Kurye kaydı sırasında şirket seçimi için kullanılır
+     */
+    @GetMapping("/public")
+    @Operation(summary = "Kargo Şirketleri (Public)", description = "Kayıt sırasında şirket seçimi için tüm aktif kargo şirketlerini getirir")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Kargo şirketleri başarıyla getirildi"),
+        @ApiResponse(responseCode = "400", description = "Hata oluştu")
+    })
+    public ResponseEntity<ApiResponseWrapper<List<UserResponse>>> getShipmentCompaniesPublic() {
+        try {
+            List<User> companies = userService.getShipmentCompanies();
+            List<UserResponse> companyResponses = companies.stream()
+                    .map(this::convertToUserResponse)
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(new ApiResponseWrapper<>(true, companyResponses, "Kargo şirketleri başarıyla getirildi"));
+        } catch (Exception e) {
+            log.error("Kargo şirketleri getirilemedi. Hata: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponseWrapper<>(false, null, "Kargo şirketleri getirilemedi: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Tüm aktif kargo şirketlerini getir
      * Shipment oluşturma sırasında dropdown için kullanılır
      */

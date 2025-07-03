@@ -104,6 +104,7 @@ export interface RegisterData {
   phone: string;
   address?: string;
   roles: string[]; // Backend'de Set<Role> bekliyor
+  companyId?: number; // Carrier role için şirket ID'si
 }
 
 // Kargo şirketi interface'i

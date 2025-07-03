@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { LoginData, RegisterData, User, ApiResponse } from '../types';
 
 // API base URL - API Gateway portu
-const API_BASE_URL = 'http://localhost:8080';
+export const API_BASE_URL = 'http://localhost:8080';
 
 // Axios instance oluştur
 const api: AxiosInstance = axios.create({
