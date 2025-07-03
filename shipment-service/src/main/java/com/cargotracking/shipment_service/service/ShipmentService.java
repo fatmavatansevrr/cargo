@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,16 +84,22 @@ public class ShipmentService {
         shipment.setShippingCost(calculateShippingCost(request.getPackageInfo(), request.getServiceType()));
         
         // Otomatik carrier atama
+        log.info("Carrier atama işlemi başlatılıyor. Şirket ID: {}", request.getShipmentCompanyId());
         Long assignedCarrierId = assignCarrierAutomatically(request.getShipmentCompanyId());
         if (assignedCarrierId != null) {
             shipment.setAssignedCarrierId(assignedCarrierId);
-            log.info("Gönderi otomatik olarak carrier'a atandı. Carrier ID: {}", assignedCarrierId);
+            log.info("✅ Gönderi başarıyla carrier'a atandı. Tracking: {}, Carrier ID: {}", 
+                shipment.getTrackingNumber(), assignedCarrierId);
         } else {
-            log.warn("Otomatik carrier ataması başarısız. Şirket ID: {}", request.getShipmentCompanyId());
+            log.warn("⚠️ Otomatik carrier ataması başarısız. Şirket ID: {}", request.getShipmentCompanyId());
         }
         
         // Veritabanına kaydet
         Shipment savedShipment = shipmentRepository.save(shipment);
+        
+        // Kayıt sonrası doğrulama logu
+        log.info("💾 Gönderi veritabanına kaydedildi. ID: {}, Tracking: {}, Atanan Carrier: {}", 
+            savedShipment.getId(), savedShipment.getTrackingNumber(), savedShipment.getAssignedCarrierId());
         
         // Kafka olayı yayınla - recipient iletişim bilgileri ile
         Map<String, Object> eventData = new HashMap<>();
@@ -148,15 +155,15 @@ public class ShipmentService {
      */
     @Transactional(readOnly = true)
     public List<ShipmentResponse> findCarrierShipments(Long carrierId) {
-        log.info("Carrier gönderileri listeleniyor. Carrier ID: {}", carrierId);
+        log.info("🔍 Carrier gönderileri listeleniyor. Carrier ID: {}", carrierId);
         
-        // Şimdilik tüm aktif gönderileri döndür (test için)
-        // Gerçek implementasyonda carrier_id alanı ile filtreleme yapılacak
-        List<Shipment> shipments = shipmentRepository.findByStatusIn(
-            List.of(
+        // Sadece bu carrier'a atanmış ve aktif olan gönderileri getir
+        List<Shipment> shipments = shipmentRepository.findByAssignedCarrierIdAndStatus(
+            carrierId, 
                 Shipment.ShipmentStatus.ACTIVE
-            )
         );
+        
+        log.info("📦 Bulunan atanmış kargo sayısı: {} (Carrier ID: {})", shipments.size(), carrierId);
         
         return shipments.stream()
                 .map(this::convertToResponse)
@@ -785,55 +792,49 @@ public class ShipmentService {
     /**
      * Otomatik carrier atama - En az kargo sayısına sahip carrier'ı seçer
      * Aynı sayıda kargo olan carrier'lar varsa random seçer
+     * Synchronized - Race condition'ı önlemek için
      */
-    private Long assignCarrierAutomatically(Long shipmentCompanyId) {
-        try {
-            log.info("Otomatik carrier atama başlatılıyor. Şirket ID: {}", shipmentCompanyId);
-            
-            // Şirketin carrier'larını getir
-            UserServiceClient.ApiResponseWrapper<List<UserServiceClient.UserDto>> response = 
+    private synchronized Long assignCarrierAutomatically(Long shipmentCompanyId) {
+        log.info("Kargo şirketi için uygun carrier aranıyor. Şirket ID: {}", shipmentCompanyId);
+
+        // User service'i çağırarak ilgili şirketteki tüm carrier'ları al
+        UserServiceClient.ApiResponseWrapper<List<UserServiceClient.UserDto>> response =
                 userServiceClient.getCompanyCarriers(shipmentCompanyId);
-            
-            if (!response.isSuccess() || response.getData() == null || response.getData().isEmpty()) {
-                log.warn("Şirketin carrier'ı bulunamadı. Şirket ID: {}", shipmentCompanyId);
-                return null;
-            }
-            
-            List<UserServiceClient.UserDto> carriers = response.getData();
-            log.info("Bulunan carrier sayısı: {}", carriers.size());
-            
-            // Her carrier için aktif kargo sayısını hesapla
-            Map<Long, Long> carrierWorkloads = new HashMap<>();
-            for (UserServiceClient.UserDto carrier : carriers) {
-                Long activeShipmentCount = shipmentRepository.countByAssignedCarrierIdAndStatus(
-                    carrier.getId(), 
+
+        if (!response.isSuccess() || response.getData() == null || response.getData().isEmpty()) {
+            log.warn("Bu kargo şirketine atanmış aktif carrier bulunamadı. Şirket ID: {}", shipmentCompanyId);
+            return null;
+        }
+
+        List<UserServiceClient.UserDto> carriers = response.getData();
+        log.info("{} kargo şirketi için {} adet carrier bulundu.", shipmentCompanyId, carriers.size());
+
+        // En az gönderiye sahip olan carrier'ları bul
+        List<Long> bestCarriers = new ArrayList<>();
+        long minShipments = Long.MAX_VALUE;
+
+        for (UserServiceClient.UserDto carrier : carriers) {
+            long assignedShipments = shipmentRepository.countByAssignedCarrierIdAndStatus(
+                    carrier.getId(),
                     Shipment.ShipmentStatus.ACTIVE
-                );
-                carrierWorkloads.put(carrier.getId(), activeShipmentCount);
-                log.debug("Carrier {} aktif kargo sayısı: {}", carrier.getId(), activeShipmentCount);
+            );
+            log.info("Carrier ID: {} için bulunan atanmış kargo sayısı: {}", carrier.getId(), assignedShipments);
+
+            if (assignedShipments < minShipments) {
+                minShipments = assignedShipments;
+                bestCarriers.clear();
+                bestCarriers.add(carrier.getId());
+            } else if (assignedShipments == minShipments) {
+                bestCarriers.add(carrier.getId());
             }
-            
-            // En az kargo sayısına sahip carrier'ları bul
-            Long minWorkload = carrierWorkloads.values().stream()
-                .min(Long::compareTo)
-                .orElse(0L);
-            
-            List<Long> availableCarriers = carrierWorkloads.entrySet().stream()
-                .filter(entry -> entry.getValue().equals(minWorkload))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-            
-            // Random seç (aynı workload'a sahip carrier'lar arasından)
-            Long selectedCarrierId = availableCarriers.get(random.nextInt(availableCarriers.size()));
-            
-            log.info("Otomatik carrier ataması tamamlandı. Seçilen carrier ID: {}, Workload: {}", 
-                selectedCarrierId, minWorkload);
-            
-            return selectedCarrierId;
-            
-        } catch (Exception e) {
-            log.error("Otomatik carrier atama sırasında hata oluştu. Şirket ID: {}, Hata: {}", 
-                shipmentCompanyId, e.getMessage(), e);
+        }
+
+        if (!bestCarriers.isEmpty()) {
+            Long chosenCarrierId = bestCarriers.get(random.nextInt(bestCarriers.size()));
+            log.info("En uygun carrier'lar arasından rastgele seçildi. Carrier ID: {}, Atanmış kargo sayısı: {}", chosenCarrierId, minShipments);
+            return chosenCarrierId;
+        } else {
+            log.warn("Uygun carrier bulunamadı. Şirket ID: {}", shipmentCompanyId);
             return null;
         }
     }

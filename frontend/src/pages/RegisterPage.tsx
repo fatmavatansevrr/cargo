@@ -48,8 +48,7 @@ const RegisterPage: React.FC = () => {
     const [success, setSuccess] = useState<string>('');
     const [selectedRole, setSelectedRole] = useState<string>('CUSTOMER');
     const [companies, setCompanies] = useState<Company[]>([]);
-    const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
-    const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
+    const [isCompanyLoading, setIsCompanyLoading] = useState(false);
 
     const navigate = useNavigate();
 
@@ -58,42 +57,33 @@ const RegisterPage: React.FC = () => {
         handleSubmit,
         formState: { errors },
         watch,
+        setValue
     } = useForm<RegisterData & { confirmPassword: string }>();
 
     const watchPassword = watch('password');
+    const watchRole = watch('roles');
 
-    // Carrier role seçildiğinde şirket listesini getir
     useEffect(() => {
-        if (selectedRole === 'CARRIER') {
-            fetchCompanies();
-        } else {
-            setSelectedCompanyId(null);
-        }
-    }, [selectedRole]);
-
-    const fetchCompanies = async () => {
-        setIsLoadingCompanies(true);
-        console.log('🔍 CARRIER DEBUG - Şirket listesi getiriliyor...');
-        try {
-            const response = await companyService.getShipmentCompanies();
-            console.log('🔍 CARRIER DEBUG - API Response:', response);
-            if (response.success) {
-                console.log('🔍 CARRIER DEBUG - Şirketler başarıyla alındı:', response.data);
-                setCompanies(response.data);
-                if (response.data.length === 0) {
-                    console.warn('⚠️ CARRIER DEBUG - Şirket listesi boş!');
+        const fetchCompanies = async () => {
+            if (selectedRole === 'CARRIER') {
+                setIsCompanyLoading(true);
+                try {
+                    const response = await companyService.getShipmentCompanies();
+                    if (response.success) {
+                        setCompanies(response.data);
+                    } else {
+                        setError('Kargo şirketleri yüklenemedi.');
+                    }
+                } catch (err) {
+                    setError('Kargo şirketleri yüklenirken bir hata oluştu.');
+                } finally {
+                    setIsCompanyLoading(false);
                 }
-            } else {
-                console.error('❌ CARRIER DEBUG - API Error:', response.message);
-                setError(response.message);
             }
-        } catch (err) {
-            console.error('❌ CARRIER DEBUG - Network Error:', err);
-            setError('Şirket listesi alınamadı: ' + (err as Error).message);
-        } finally {
-            setIsLoadingCompanies(false);
-        }
-    };
+        };
+
+        fetchCompanies();
+    }, [selectedRole]);
 
     const onSubmit = async (data: RegisterData & { confirmPassword: string }) => {
         console.log('🚀 Register form submitted with data:', { ...data, password: '***', confirmPassword: '***' });
@@ -102,12 +92,6 @@ const RegisterPage: React.FC = () => {
         setSuccess('');
 
         try {
-            // Carrier role için şirket seçimi zorunlu kontrolü
-            if (selectedRole === 'CARRIER' && !selectedCompanyId) {
-                setError('Taşıyıcı olarak kayıt olurken bir şirket seçmelisiniz.');
-                return;
-            }
-
             // confirmPassword'u çıkarıp RegisterData formatına dönüştür
             const registerData: RegisterData = {
                 username: data.username,
@@ -117,8 +101,8 @@ const RegisterPage: React.FC = () => {
                 lastName: data.lastName,
                 phone: data.phone,
                 address: data.address || '',
-                roles: [selectedRole], // Role prefix'i kaldırıldı - backend enum'ı ROLE_ olmadan tanımlı
-                companyId: selectedRole === 'CARRIER' ? selectedCompanyId || undefined : undefined
+                roles: [`ROLE_${selectedRole}`], // Backend için ROLE_ prefix'i ekle
+                companyId: selectedRole === 'CARRIER' ? data.companyId : undefined,
             };
 
             console.log('🔄 Calling register service...');
@@ -305,78 +289,46 @@ const RegisterPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Company Selection - Sadece Carrier role seçildiğinde görünür */}
+                        {/* Company Selection for Carrier */}
                         {selectedRole === 'CARRIER' && (
-                            <div className="mb-8">
-                                <label className="block text-sm font-medium text-gray-700 mb-4">
-                                    Hangi kargo şirketinde çalışıyorsunuz? *
+                            <div className="animate-slide-down mb-6">
+                                <label htmlFor="companyId" className="block text-sm font-medium text-gray-700">
+                                    Kargo Şirketi *
                                 </label>
-                                {isLoadingCompanies ? (
-                                    <div className="flex items-center justify-center p-4 bg-gray-50 rounded-2xl">
-                                        <div className="flex items-center space-x-2">
-                                            <svg className="animate-spin h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            <span className="text-sm text-gray-600">Şirketler yükleniyor...</span>
-                                        </div>
-                                    </div>
-                                ) : companies.length > 0 ? (
-                                    <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto">
-                                        {companies.map((company) => (
-                                            <label
-                                                key={company.id}
-                                                className={`relative flex items-center p-4 cursor-pointer rounded-2xl border-2 transition-all duration-200 hover:shadow-md ${
-                                                    selectedCompanyId === company.id
-                                                        ? 'border-purple-500 bg-purple-50 shadow-lg'
-                                                        : 'border-gray-200 bg-white hover:border-gray-300'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="company"
-                                                    value={company.id}
-                                                    checked={selectedCompanyId === company.id}
-                                                    onChange={(e) => setSelectedCompanyId(Number(e.target.value))}
-                                                    className="sr-only"
-                                                />
-                                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mr-4 bg-gradient-to-br from-indigo-400 to-purple-500">
-                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                    </svg>
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="text-sm font-semibold text-gray-900">
-                                                        {company.firstName} {company.lastName}
-                                                    </div>
-                                                    <div className="text-xs text-gray-600">
-                                                        {company.email} {company.phone && `• ${company.phone}`}
-                                                    </div>
-                                                </div>
-                                                {selectedCompanyId === company.id && (
-                                                    <div className="w-5 h-5 text-purple-500">
-                                                        <svg fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                        </svg>
-                                                    </div>
-                                                )}
-                                            </label>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center p-6 bg-yellow-50 rounded-2xl border border-yellow-200">
-                                        <svg className="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                <div className="mt-2 relative">
+                                    <select
+                                        id="companyId"
+                                        {...register('companyId', { required: 'Kargo şirketi seçimi zorunludur' })}
+                                        className={`appearance-none block w-full bg-white border border-gray-300 rounded-xl py-2 pl-3 pr-10 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition duration-150 ease-in-out ${
+                                            errors.companyId ? 'border-red-500' : ''
+                                        }`}
+                                        disabled={isCompanyLoading}
+                                    >
+                                        {isCompanyLoading ? (
+                                            <option>Şirketler yükleniyor...</option>
+                                        ) : (
+                                            <>
+                                                <option value="">Bir şirket seçin</option>
+                                                {companies.map((company) => (
+                                                    <option key={company.id} value={company.id}>
+                                                        {company.firstName} {/* Şirketler de User modeli kullandığı için firstName */}
+                                                    </option>
+                                                ))}
+                                            </>
+                                        )}
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                                         </svg>
-                                        <p className="text-sm text-yellow-800 font-medium">Henüz kayıtlı kargo şirketi yok</p>
-                                        <p className="text-xs text-yellow-600 mt-1">Lütfen daha sonra tekrar deneyin veya müşteri olarak kayıt olun.</p>
                                     </div>
-                                )}
+                                </div>
+                                {errors.companyId && <p className="mt-2 text-sm text-red-600">{errors.companyId.message}</p>}
                             </div>
                         )}
 
                         {/* Register Form */}
-                        <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+                        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
                             {/* İsim ve Soyisim */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

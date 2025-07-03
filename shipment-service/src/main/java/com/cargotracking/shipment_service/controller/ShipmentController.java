@@ -219,13 +219,31 @@ public class ShipmentController {
     @ApiResponse(responseCode = "200", description = "Carrier gönderileri başarıyla listelendi")
     public ResponseEntity<List<ShipmentResponse>> getCarrierShipments(Authentication authentication) {
         
-        log.info("Carrier gönderileri listeleme isteği");
+        log.info("🔍 Carrier gönderileri listeleme isteği. Username: {}", authentication.getName());
         
-        // Gerçek implementasyonda JWT token'dan carrier ID alınacak
-        Long carrierId = 1L; // Test için sabit carrier ID
-        
-        List<ShipmentResponse> shipments = shipmentService.findCarrierShipments(carrierId);
-        return ResponseEntity.ok(shipments);
+        try {
+            // JWT'den username al ve user service'ten user ID'yi getir
+            String username = authentication.getName();
+            
+            // UserService'ten user bilgilerini al
+            UserServiceClient.ApiResponseWrapper<UserServiceClient.UserDto> userResponse = 
+                userServiceClient.getUserByUsername(username);
+            
+            if (!userResponse.isSuccess() || userResponse.getData() == null) {
+                log.error("❌ Kullanıcı bulunamadı. Username: {}", username);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            Long carrierId = userResponse.getData().getId();
+            log.info("✅ Carrier ID bulundu: {} (Username: {})", carrierId, username);
+            
+            List<ShipmentResponse> shipments = shipmentService.findCarrierShipments(carrierId);
+            return ResponseEntity.ok(shipments);
+            
+        } catch (Exception e) {
+            log.error("❌ Carrier gönderileri listeleme hatası: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
     /**

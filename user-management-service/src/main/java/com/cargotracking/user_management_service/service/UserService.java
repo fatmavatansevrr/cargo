@@ -91,6 +91,15 @@ public class UserService {
     }
 
     /**
+     * Username ile kullanıcı getir (Internal microservice için)
+     * Exception fırlatır, kullanıcı bulunamazsa
+     */
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + username));
+    }
+
+    /**
      * Profil görüntüleme - FR-UM-005
      */
     public UserResponse getUserProfile(String username) {

@@ -80,4 +80,10 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
      * Otomatik carrier atama için kullanılır
      */
     Long countByAssignedCarrierIdAndStatus(Long carrierId, Shipment.ShipmentStatus status);
+    
+    /**
+     * Belirli carrier'a atanmış ve belirli durumdaki gönderileri listeleme
+     * Carrier dashboard için kullanılır
+     */
+    List<Shipment> findByAssignedCarrierIdAndStatus(Long carrierId, Shipment.ShipmentStatus status);
 } 

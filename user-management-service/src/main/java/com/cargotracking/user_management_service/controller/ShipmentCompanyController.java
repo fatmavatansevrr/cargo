@@ -201,46 +201,4 @@ public class ShipmentCompanyController {
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
-
-    /**
-     * Internal endpoint - Kargo şirketlerini getir (Microservice communication için)
-     * Authentication gerektirmez
-     */
-    @GetMapping("/internal/companies")
-    @Operation(summary = "Internal - Kargo Şirketleri", description = "Tüm aktif kargo şirketlerini getirir (Internal)")
-    public ResponseEntity<ApiResponseWrapper<List<UserResponse>>> getShipmentCompaniesInternal() {
-        try {
-            List<User> companies = userService.getShipmentCompanies();
-            List<UserResponse> companyResponses = companies.stream()
-                    .map(this::convertToUserResponse)
-                    .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(new ApiResponseWrapper<>(true, companyResponses, "Kargo şirketleri başarıyla getirildi"));
-        } catch (Exception e) {
-            log.error("Kargo şirketleri getirilemedi. Hata: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponseWrapper<>(false, null, "Kargo şirketleri getirilemedi: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * Internal endpoint - Şirket carrier'larını getir (Microservice communication için)
-     * Authentication gerektirmez
-     */
-    @GetMapping("/internal/companies/{companyId}/carriers")
-    @Operation(summary = "Internal - Şirket Carrier'ları", description = "Belirli bir kargo şirketinin tüm carrier'larını getirir (Internal)")
-    public ResponseEntity<ApiResponseWrapper<List<UserResponse>>> getCompanyCarriersInternal(@PathVariable Long companyId) {
-        try {
-            List<User> carriers = userService.getCarriersByCompanyId(companyId);
-            List<UserResponse> carrierResponses = carriers.stream()
-                    .map(this::convertToUserResponse)
-                    .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(new ApiResponseWrapper<>(true, carrierResponses, "Carrier'lar başarıyla getirildi"));
-        } catch (Exception e) {
-            log.error("Carrier'lar getirilemedi. Company ID: {}, Hata: {}", companyId, e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponseWrapper<>(false, null, "Carrier'lar getirilemedi: " + e.getMessage()));
-        }
-    }
 } 

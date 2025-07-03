@@ -25,6 +25,12 @@ public interface UserServiceClient {
      */
     @GetMapping("/api/admin/internal/companies")
     ApiResponseWrapper<List<UserDto>> getShipmentCompanies();
+    
+    /**
+     * Username ile kullanıcı bilgilerini getirir (Internal endpoint)
+     */
+    @GetMapping("/api/admin/internal/users/username/{username}")
+    ApiResponseWrapper<UserDto> getUserByUsername(@PathVariable("username") String username);
 
     /**
      * API Response wrapper class
