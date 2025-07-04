@@ -36,8 +36,8 @@ interface DeliveryPreferencesDto {
 }
 
 interface CreateShipmentRequest {
-  senderAddress: AddressDto;
-  recipientAddress: AddressDto;
+  senderInfo: AddressDto;
+  receiverInfo: AddressDto;
   packageInfo: PackageDto;
   serviceType: 'STANDARD' | 'EXPRESS' | 'OVERNIGHT' | 'INTERNATIONAL';
   specialInstructions?: string;
@@ -56,7 +56,7 @@ const CreateShipmentPage: React.FC = () => {
   
   // Form state - Başlangıç değerleri ile
   const [formData, setFormData] = useState<CreateShipmentRequest>({
-      senderAddress: {
+    senderInfo: {
       fullName: '',
       addressLine1: '',
       addressLine2: '',
@@ -67,7 +67,7 @@ const CreateShipmentPage: React.FC = () => {
       phone: '',
       email: '',
       },
-      recipientAddress: {
+    receiverInfo: {
       fullName: '',
       addressLine1: '',
       addressLine2: '',
@@ -154,8 +154,8 @@ const CreateShipmentPage: React.FC = () => {
     const requestData = {
       ...formData,
       shipmentCompanyId: selectedCompanyId,
-      recipientEmail: formData.recipientAddress.email,
-      recipientPhone: formData.recipientAddress.phone,
+      recipientEmail: formData.receiverInfo.email,
+      recipientPhone: formData.receiverInfo.phone,
     };
     
     console.log('📤 Gönderi oluşturma isteği gönderiliyor:', {
@@ -286,8 +286,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.fullName}
-                              onChange={(e) => handleInputChange('senderAddress.fullName', e.target.value)}
+                              value={formData.senderInfo.fullName}
+                              onChange={(e) => handleInputChange('senderInfo.fullName', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -298,8 +298,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="tel"
-                              value={formData.senderAddress.phone}
-                              onChange={(e) => handleInputChange('senderAddress.phone', e.target.value)}
+                              value={formData.senderInfo.phone}
+                              onChange={(e) => handleInputChange('senderInfo.phone', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -309,8 +309,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="email"
-                              value={formData.senderAddress.email}
-                              onChange={(e) => handleInputChange('senderAddress.email', e.target.value)}
+                              value={formData.senderInfo.email}
+                              onChange={(e) => handleInputChange('senderInfo.email', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -320,8 +320,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.addressLine1}
-                              onChange={(e) => handleInputChange('senderAddress.addressLine1', e.target.value)}
+                              value={formData.senderInfo.addressLine1}
+                              onChange={(e) => handleInputChange('senderInfo.addressLine1', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -332,8 +332,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.addressLine2}
-                              onChange={(e) => handleInputChange('senderAddress.addressLine2', e.target.value)}
+                              value={formData.senderInfo.addressLine2}
+                              onChange={(e) => handleInputChange('senderInfo.addressLine2', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -343,8 +343,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.city}
-                              onChange={(e) => handleInputChange('senderAddress.city', e.target.value)}
+                              value={formData.senderInfo.city}
+                              onChange={(e) => handleInputChange('senderInfo.city', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -355,8 +355,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.state}
-                              onChange={(e) => handleInputChange('senderAddress.state', e.target.value)}
+                              value={formData.senderInfo.state}
+                              onChange={(e) => handleInputChange('senderInfo.state', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -367,8 +367,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.postalCode}
-                              onChange={(e) => handleInputChange('senderAddress.postalCode', e.target.value)}
+                              value={formData.senderInfo.postalCode}
+                              onChange={(e) => handleInputChange('senderInfo.postalCode', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -379,8 +379,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.senderAddress.country}
-                              onChange={(e) => handleInputChange('senderAddress.country', e.target.value)}
+                              value={formData.senderInfo.country}
+                              onChange={(e) => handleInputChange('senderInfo.country', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -398,8 +398,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.fullName}
-                              onChange={(e) => handleInputChange('recipientAddress.fullName', e.target.value)}
+                              value={formData.receiverInfo.fullName}
+                              onChange={(e) => handleInputChange('receiverInfo.fullName', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -410,8 +410,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="tel"
-                              value={formData.recipientAddress.phone}
-                              onChange={(e) => handleInputChange('recipientAddress.phone', e.target.value)}
+                              value={formData.receiverInfo.phone}
+                              onChange={(e) => handleInputChange('receiverInfo.phone', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -421,8 +421,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="email"
-                              value={formData.recipientAddress.email}
-                              onChange={(e) => handleInputChange('recipientAddress.email', e.target.value)}
+                              value={formData.receiverInfo.email}
+                              onChange={(e) => handleInputChange('receiverInfo.email', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -432,8 +432,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.addressLine1}
-                              onChange={(e) => handleInputChange('recipientAddress.addressLine1', e.target.value)}
+                              value={formData.receiverInfo.addressLine1}
+                              onChange={(e) => handleInputChange('receiverInfo.addressLine1', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -444,8 +444,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.addressLine2}
-                              onChange={(e) => handleInputChange('recipientAddress.addressLine2', e.target.value)}
+                              value={formData.receiverInfo.addressLine2}
+                              onChange={(e) => handleInputChange('receiverInfo.addressLine2', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -455,8 +455,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.city}
-                              onChange={(e) => handleInputChange('recipientAddress.city', e.target.value)}
+                              value={formData.receiverInfo.city}
+                              onChange={(e) => handleInputChange('receiverInfo.city', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -467,8 +467,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.state}
-                              onChange={(e) => handleInputChange('recipientAddress.state', e.target.value)}
+                              value={formData.receiverInfo.state}
+                              onChange={(e) => handleInputChange('receiverInfo.state', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -479,8 +479,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.postalCode}
-                              onChange={(e) => handleInputChange('recipientAddress.postalCode', e.target.value)}
+                              value={formData.receiverInfo.postalCode}
+                              onChange={(e) => handleInputChange('receiverInfo.postalCode', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />
@@ -491,8 +491,8 @@ const CreateShipmentPage: React.FC = () => {
                           </label>
                           <input
                               type="text"
-                              value={formData.recipientAddress.country}
-                              onChange={(e) => handleInputChange('recipientAddress.country', e.target.value)}
+                              value={formData.receiverInfo.country}
+                              onChange={(e) => handleInputChange('receiverInfo.country', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               required
                           />

@@ -348,7 +348,6 @@ public class ShipmentController {
             return ResponseEntity.ok(fallbackStats);
         }
     }
-
     /**
      * Test verisi oluşturma - sadece development için
      */

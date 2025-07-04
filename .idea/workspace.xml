@@ -4,17 +4,38 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="Tracking Service - status updates added">
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/config/RedisConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingCacheService.java" afterDir="false" />
+    <list default="true" id="bf76f69d-4562-47d5-9889-d104470e70ca" name="Changes" comment="notification %80 çözüldü sms kaldı bi">
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/NotificationCardProps.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/components/NotificationPreferencesPanelProps.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/hooks/useToast.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/factory/NotificationFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/ShipmentDetailsDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-repo/shipment-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/shipment-service.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-repo/user-management-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-repo/user-management-service.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CreateShipmentPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/CreateShipmentPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/NotificationsPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/NotificationsPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/services/notificationService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/services/notificationService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/event/ShipmentEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/event/ShipmentEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/event/TrackingEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/event/TrackingEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/listener/TrackingEventListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/listener/TrackingEventListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/model/Notification.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/model/Notification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/service/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/service/NotificationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/client/UserServiceClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/client/UserServiceClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/controller/InternalController.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/controller/InternalController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/controller/ShipmentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/controller/ShipmentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/repository/ShipmentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/repository/ShipmentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/shipment-service/src/main/java/com/cargotracking/shipment_service/service/ShipmentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/client/ShipmentServiceClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/client/ShipmentServiceClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/config/KafkaConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/config/KafkaConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/controller/TrackingController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/repository/TrackingStatusRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/StatusChangedEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/TrackingEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/TrackingHistoryResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/dto/TrackingHistoryResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/kafka/StatusUpdateListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/kafka/StatusUpdateListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingRecord.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/model/TrackingRecord.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/java/com/cargotracking/tracking_service/service/TrackingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tracking-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tracking-service/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,52 +88,54 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Docker.docker-compose.yml.analytics-service: Compose Deployment.executor": "Run",
-    "Maven.analytics-service [clean].executor": "Run",
-    "Maven.analytics-service [install].executor": "Run",
-    "Maven.cargo-tracking-system [clean].executor": "Run",
-    "Maven.cargo-tracking-system [install].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Spring Boot.AnalyticsServiceApplication.executor": "Run",
-    "Spring Boot.ApiGatewayApplication.executor": "Run",
-    "Spring Boot.ConfigServerApplication.executor": "Run",
-    "Spring Boot.EurekaServerApplication.executor": "Run",
-    "Spring Boot.NotificationServiceApplication.executor": "Run",
-    "Spring Boot.ShipmentServiceApplication.executor": "Run",
-    "Spring Boot.TrackingServiceApplication.executor": "Run",
-    "Spring Boot.UserManagementServiceApplication.executor": "Run",
-    "git-widget-placeholder": "arda-003-bilge",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/vatan/Desktop/4.SINIF/4.sınıf dönem 2/microservices/cargo-tracking/user-management-service",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Docker.docker-compose.yml.analytics-service: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.analytics-service [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.analytics-service [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.cargo-tracking-system [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.cargo-tracking-system [install].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.AnalyticsServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ConfigServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.NotificationServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ShipmentServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.TrackingServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.UserManagementServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;arda-003+fatma&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;jsx.switch.disabled&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/vatan/Desktop/4.SINIF/4.sınıf dönem 2/microservices/cargo-tracking/user-management-service&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\vatan\\Desktop\\4.SINIF\\4.sınıf dönem 2\\microservices\\cargo\\frontend\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\user-management-service" />
@@ -122,11 +145,11 @@
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\eureka-server" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo\frontend\src\components" />
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\user-management-service\src\main\resources" />
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\tracking-service\src\main\resources" />
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\shipment-service\src\main\resources" />
       <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\notification-service\src\main\resources" />
-      <recent name="C:\Users\vatan\Desktop\4.SINIF\4.sınıf dönem 2\microservices\cargo-tracking\eureka-server\src\main\resources" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -247,6 +270,7 @@
       <workItem from="1751363413209" duration="234000" />
       <workItem from="1751363771696" duration="2562000" />
       <workItem from="1751366784269" duration="5442000" />
+      <workItem from="1751618625763" duration="7982000" />
     </task>
     <task id="LOCAL-00001" summary="tracking service">
       <option name="closed" value="true" />
@@ -280,7 +304,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750017969732</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="notification %80 çözüldü sms kaldı bi">
+      <option name="closed" value="true" />
+      <created>1751575239141</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1751575239142</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -306,7 +338,19 @@
     <MESSAGE value="eureka fix" />
     <MESSAGE value="Tracking Service - status updates added" />
     <MESSAGE value="yeni branch" />
-    <option name="LAST_COMMIT_MESSAGE" value="yeni branch" />
+    <MESSAGE value="notification %80 çözüldü sms kaldı bi" />
+    <option name="LAST_COMMIT_MESSAGE" value="notification %80 çözüldü sms kaldı bi" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/notification-service/src/main/java/com/cargotracking/notification_service/service/NotificationService.java</url>
+          <line>454</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

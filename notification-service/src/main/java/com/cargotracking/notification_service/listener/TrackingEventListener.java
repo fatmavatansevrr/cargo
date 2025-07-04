@@ -22,7 +22,7 @@ public class TrackingEventListener {
     public void handleTrackingEvents(@Payload String payload, Acknowledgment ack) {
         try {
             TrackingEvent event = objectMapper.readValue(payload, TrackingEvent.class);
-            String status = event.getCurrentStatus();
+            String status = event.getNewStatus();
 
             if (status == null) {
                 log.warn("⚠️ Event'in currentStatus'u null geldi! Event: {}", event);

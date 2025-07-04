@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StatusChangedEvent {
-    private String shipmentId;
+public class TrackingEvent {
+    private String trackingNumber;
     private TrackingState newStatus;
     private String location;
     private String updatedBy;
@@ -21,4 +21,11 @@ public class StatusChangedEvent {
     private LocalDateTime updatedAt;
 
     private String recipientEmail;
+    private String receiverFullName;
+
+    private Long senderUserId;
+
+    private Long companyId;
+    private Long carrierUserId;
+
 }

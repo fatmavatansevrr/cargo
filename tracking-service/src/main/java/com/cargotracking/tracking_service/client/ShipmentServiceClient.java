@@ -2,9 +2,11 @@
 
 package com.cargotracking.tracking_service.client;
 
+import com.cargotracking.tracking_service.dto.ShipmentDetailsDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
@@ -24,31 +26,7 @@ public class ShipmentServiceClient {
     @Value("${services.shipment-service.url:http://shipment-service:8082}")
     private String shipmentServiceUrl;
 
-    /**
-     * Tracking number'a göre recipient email'i al
-     */
-    public String getRecipientEmailByTrackingNumber(String trackingNumber) {
-        try {
-            log.debug("🔍 Tracking service'den recipient email alınıyor: {}", trackingNumber);
 
-            String url = shipmentServiceUrl + "/api/shipments/tracking/" + trackingNumber + "/recipient-email";
-            String email = restTemplate.getForObject(url, String.class);
-
-            if (email != null && !email.trim().isEmpty()) {
-                log.debug("✅ Recipient email bulundu: {} -> {}", trackingNumber, email);
-                return email.trim();
-            }
-
-            return null;
-
-        } catch (HttpClientErrorException.NotFound e) {
-            log.debug("⚠️ Shipment bulunamadı: {}", trackingNumber);
-            return null;
-        } catch (Exception e) {
-            log.warn("❌ Recipient email alınırken hata: {} - {}", trackingNumber, e.getMessage());
-            return null;
-        }
-    }
 
     /**
      * Tracking number'a göre recipient bilgilerini al (email + name)
@@ -57,7 +35,7 @@ public class ShipmentServiceClient {
         try {
             log.debug("🔍 Recipient bilgileri alınıyor: {}", trackingNumber);
 
-            String url = shipmentServiceUrl + "/api/shipments/tracking/" + trackingNumber;
+            String url = shipmentServiceUrl + "/api/internal/shipments/tracking/" + trackingNumber;
 
             @SuppressWarnings("unchecked")
             Map<String, Object> shipment = restTemplate.getForObject(url, Map.class);
@@ -81,6 +59,23 @@ public class ShipmentServiceClient {
             return null;
         }
     }
+
+    public ShipmentDetailsDto getShipmentDetailsByTrackingNumber(String trackingNumber) {
+        try {
+            log.debug("🔍 Shipment detayları alınıyor: {}", trackingNumber);
+
+            String url = shipmentServiceUrl + "/api/internal/shipments/tracking/" + trackingNumber + "/raw";
+
+            ResponseEntity<ShipmentDetailsDto> response = restTemplate.getForEntity(url, ShipmentDetailsDto.class);
+            return response.getBody();
+
+        } catch (Exception e) {
+            log.warn("❌ Shipment detayları alınırken hata: {} - {}", trackingNumber, e.getMessage());
+            return null;
+        }
+    }
+
+
 
     /**
      * Recipient bilgileri için DTO

@@ -1,11 +1,14 @@
 package com.cargotracking.tracking_service.service;
 
 import com.cargotracking.tracking_service.client.ShipmentServiceClient;
-import com.cargotracking.tracking_service.dto.StatusChangedEvent;
+import com.cargotracking.tracking_service.dto.ShipmentDetailsDto;
+import com.cargotracking.tracking_service.dto.TrackingEvent;
 import com.cargotracking.tracking_service.dto.TrackingHistoryResponse;
 import com.cargotracking.tracking_service.model.TrackingRecord;
 import com.cargotracking.tracking_service.model.TrackingState;
 import com.cargotracking.tracking_service.repository.TrackingStatusRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -25,9 +28,14 @@ public class TrackingService {
     private final ShipmentServiceClient shipmentServiceClient;
 
 
-    public TrackingHistoryResponse updateStatus(String trackingNumber, TrackingState state, String location, String updatedBy) {
+    public TrackingHistoryResponse updateStatus(String trackingNumber, TrackingState state, String location, String updatedBy) throws JsonProcessingException {
         LocalDateTime now = LocalDateTime.now();
-        String receiverMail = shipmentServiceClient.getRecipientEmailByTrackingNumber(trackingNumber);
+        ShipmentServiceClient.RecipientInfo recipientInfo = shipmentServiceClient.getRecipientInfoByTrackingNumber(trackingNumber);
+        ShipmentDetailsDto shipmentDetails = shipmentServiceClient.getShipmentDetailsByTrackingNumber(trackingNumber);
+
+        Long senderUserId = shipmentDetails != null ? shipmentDetails.getSenderCustomerId() : null;
+        Long companyId = shipmentDetails != null ? shipmentDetails.getShipmentCompanyId() : null;
+        Long carrierUserId = shipmentDetails != null ? shipmentDetails.getAssignedCarrierId() : null;
 
 
         TrackingRecord record = new TrackingRecord();
@@ -37,17 +45,25 @@ public class TrackingService {
         record.setUpdatedBy(updatedBy != null ? updatedBy : "system");
         record.setUpdatedAt(now);
 
+
         repository.save(record);
         trackingCacheService.cacheTrackingInfo(trackingNumber, record); // Güncel durumu cache'e yaz
 
-        StatusChangedEvent event = new StatusChangedEvent(
+        TrackingEvent event = new TrackingEvent(
                 trackingNumber,
                 state,
                 record.getLocation(),
                 record.getUpdatedBy(),
                 now,
-                receiverMail
+                recipientInfo != null ? recipientInfo.getEmail() : null,
+                recipientInfo != null ? recipientInfo.getFullName() : null,
+                senderUserId,
+                companyId,
+                carrierUserId
         );
+        log.info("Kafka'ya gönderilecek event JSON: {}", new ObjectMapper().writeValueAsString(event));
+
+
         kafkaTemplate.send("shipment-status-events", event);
 
         return new TrackingHistoryResponse(
@@ -56,7 +72,11 @@ public class TrackingService {
                 record.getLocation(),
                 record.getUpdatedBy(),
                 now,
-                receiverMail
+                recipientInfo != null ? recipientInfo.getEmail() : null,
+                recipientInfo != null ? recipientInfo.getFullName() : null,
+                senderUserId,
+                companyId,
+                carrierUserId
         );
     }
 
@@ -114,13 +134,17 @@ public class TrackingService {
 
         savedRecords.forEach(record -> {
             trackingCacheService.cacheTrackingInfo(record.getShipmentId(), record); // Cache'e yaz
-            kafkaTemplate.send("shipment-status-events", new StatusChangedEvent(
+            kafkaTemplate.send("shipment-status-events", new TrackingEvent(
                     record.getShipmentId(),
                     record.getStatus(),
                     record.getLocation(),
                     record.getUpdatedBy(),
                     record.getUpdatedAt(),
-                    record.getReceiverEmail()
+                    record.getReceiverEmail(),
+                    record.getReceiverFullName(),
+                    record.getSenderUserId(),
+                    record.getCompanyId(),
+                    record.getCarrierUserId()
             ));
         });
 
@@ -149,7 +173,13 @@ public class TrackingService {
                 record.getLocation(),
                 record.getUpdatedBy(),
                 record.getUpdatedAt(),
-                record.getReceiverEmail()
+                record.getReceiverEmail(),
+                record.getReceiverFullName(),
+                record.getSenderUserId(),
+                record.getCompanyId(),
+                record.getCarrierUserId()
         );
     }
+
+
 }

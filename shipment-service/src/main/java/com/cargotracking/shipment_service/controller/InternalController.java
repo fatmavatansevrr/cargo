@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/internal/shipments")
 @RequiredArgsConstructor
@@ -70,6 +73,45 @@ public class InternalController {
 
         } catch (Exception e) {
             log.error("❌ Shipment bilgileri alınırken hata: {}", trackingNumber, e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Tracking number'a göre shipment detaylarını (raw) Map olarak döndürür
+     * (Notification/Tracking gibi servisler için)
+     */
+    @Operation(summary = "Get Raw Shipment Details by Tracking Number (Internal)", description = "Tracking number'a göre shipment bilgisini ham Map olarak döndürür (Internal kullanım için)")
+    @GetMapping("/tracking/{trackingNumber}/raw")
+    public ResponseEntity<Map<String, Object>> getShipmentDetailsByTrackingNumberRaw(
+            @Parameter(description = "Tracking Number") @PathVariable String trackingNumber) {
+        log.info("🔍 [INTERNAL] Raw shipment detayları isteniyor: {}", trackingNumber);
+
+        try {
+            ShipmentResponse shipment = shipmentService.getShipmentByTrackingNumber(trackingNumber);
+            if (shipment == null) {
+                log.warn("⚠️ [INTERNAL] Shipment bulunamadı: {}", trackingNumber);
+                return ResponseEntity.notFound().build();
+            }
+
+            // ShipmentResponse → Map (field’ları kopyala)
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", shipment.getId());
+            map.put("trackingNumber", shipment.getTrackingNumber());
+            map.put("senderCustomerId", shipment.getSenderCustomerId());
+            map.put("assignedCarrierId", shipment.getAssignedCarrierId());
+            map.put("shipmentCompanyId", shipment.getShipmentCompanyId());
+            map.put("recipientAddress", shipment.getRecipientAddress());
+            map.put("senderAddress", shipment.getSenderAddress());
+            map.put("status", shipment.getStatus());
+            map.put("serviceType", shipment.getServiceType());
+            // ... gerekirse diğer field’ları da ekle ...
+
+            log.debug("✅ [INTERNAL] Raw shipment map dönüyor: {}", map.keySet());
+            return ResponseEntity.ok(map);
+
+        } catch (Exception e) {
+            log.error("❌ [INTERNAL] Raw shipment detayları alınırken hata: {}", trackingNumber, e);
             return ResponseEntity.status(500).build();
         }
     }

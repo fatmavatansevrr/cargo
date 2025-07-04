@@ -86,4 +86,6 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
      * Carrier dashboard için kullanılır
      */
     List<Shipment> findByAssignedCarrierIdAndStatus(Long carrierId, Shipment.ShipmentStatus status);
-} 
+
+
+}

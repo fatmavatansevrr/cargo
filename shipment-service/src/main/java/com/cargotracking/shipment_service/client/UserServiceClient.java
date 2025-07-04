@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User Management Service ile iletişim için Feign Client
@@ -93,6 +94,17 @@ public interface UserServiceClient {
         private String phone;
         private String address;
         private Long companyId;
+        private Set<String> roles;
+
+        public Set<String> getRoles() {
+            return roles;
+        }
+
+        public void setRoles(List<String> role) {
+            this.roles = roles;
+        }
+
+
 
         // Constructors
         public UserDto() {}
@@ -161,5 +173,7 @@ public interface UserServiceClient {
         public void setCompanyId(Long companyId) {
             this.companyId = companyId;
         }
+
+
     }
 } 

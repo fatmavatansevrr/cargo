@@ -47,7 +47,7 @@ public class ShipmentService {
     private KafkaTemplate<String, Object> kafkaTemplate;
     
     private final Random random = new Random();
-    
+
     private static final String SHIPMENT_TOPIC = "shipment-events";
     
     /**
@@ -94,6 +94,8 @@ public class ShipmentService {
             shipment.setAssignedCarrierId(assignedCarrierId);
             log.info("✅ Gönderi başarıyla carrier'a atandı. Tracking: {}, Carrier ID: {}", 
                 shipment.getTrackingNumber(), assignedCarrierId);
+
+
         } else {
             log.warn("⚠️ Otomatik carrier ataması başarısız. Şirket ID: {}", request.getShipmentCompanyId());
         }
@@ -112,6 +114,8 @@ public class ShipmentService {
         eventData.put("recipientPhone", savedShipment.getRecipientAddress().getPhone());
         eventData.put("senderAddress", convertToAddressDto(savedShipment.getSenderAddress()));
         eventData.put("recipientAddress", convertToAddressDto(savedShipment.getRecipientAddress()));
+        eventData.put("assignedCarrierId", savedShipment.getAssignedCarrierId());
+        eventData.put("shipmentCompanyId", savedShipment.getShipmentCompanyId());
         
         publishShipmentEvent(ShipmentEvent.created(
             savedShipment.getId(),
@@ -211,6 +215,8 @@ public class ShipmentService {
         eventData.put("recipientPhone", updatedShipment.getRecipientAddress().getPhone());
         eventData.put("senderAddress", convertToAddressDto(updatedShipment.getSenderAddress()));
         eventData.put("recipientAddress", convertToAddressDto(updatedShipment.getRecipientAddress()));
+        eventData.put("assignedCarrierId", updatedShipment.getAssignedCarrierId());
+        eventData.put("shipmentCompanyId", updatedShipment.getShipmentCompanyId());
         
         // Kafka olayı yayınla
         publishShipmentEvent(ShipmentEvent.updated(
@@ -264,6 +270,8 @@ public class ShipmentService {
         eventData.put("recipientPhone", finalizedShipment.getRecipientAddress().getPhone());
         eventData.put("senderAddress", convertToAddressDto(finalizedShipment.getSenderAddress()));
         eventData.put("recipientAddress", convertToAddressDto(finalizedShipment.getRecipientAddress()));
+        eventData.put("assignedCarrierId", finalizedShipment.getAssignedCarrierId());
+        eventData.put("shipmentCompanyId", finalizedShipment.getShipmentCompanyId());
 
 
         publishShipmentEvent(ShipmentEvent.updated(
@@ -346,7 +354,8 @@ public class ShipmentService {
         eventData.put("recipientPhone", updatedShipment.getRecipientAddress().getPhone());
         eventData.put("senderAddress", convertToAddressDto(updatedShipment.getSenderAddress()));
         eventData.put("recipientAddress", convertToAddressDto(updatedShipment.getRecipientAddress()));
-
+        eventData.put("assignedCarrierId", updatedShipment.getAssignedCarrierId());
+        eventData.put("shipmentCompanyId", updatedShipment.getShipmentCompanyId());
 
         // Kafka olayı yayınla
         publishShipmentEvent(ShipmentEvent.updated(

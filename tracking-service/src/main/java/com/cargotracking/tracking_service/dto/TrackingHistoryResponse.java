@@ -27,4 +27,17 @@ public class TrackingHistoryResponse {
     private LocalDateTime updatedAt;
 
     private String recipientEmail;
+
+    @Schema(description = "Alıcı ad soyad", example = "Ahmet Yılmaz")
+    private String receiverFullName;
+
+    @Schema(description = "Gönderici user ID", example = "32001")
+    private Long senderUserId;
+
+    @Schema(description = "Şirket ID", example = "42")
+    private Long companyId;
+
+    @Schema(description = "Kurye (carrier) user ID", example = "42001")
+    private Long carrierUserId;
+
 }

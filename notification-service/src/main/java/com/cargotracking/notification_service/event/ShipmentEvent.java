@@ -76,6 +76,11 @@ public class ShipmentEvent {
     private String customerName;
     private String customerEmail;
 
+    //carrier and company
+    private Long shipmentCompanyId;
+    private Long assignedCarrierUserId;
+
+
     /**
      * eventData'dan notification için gerekli bilgileri çıkar
      */
@@ -164,6 +169,39 @@ public class ShipmentEvent {
             Object estimatedDelivery = data.get("estimatedDeliveryDate");
             if (estimatedDelivery != null && estimatedDelivery instanceof String) {
                 this.estimatedDeliveryDate = LocalDateTime.parse((String) estimatedDelivery);
+            }
+
+            // companyId
+            Object companyIdObj = data.get("shipmentCompanyId");
+            if (companyIdObj != null) {
+                if (companyIdObj instanceof Number)
+                    this.shipmentCompanyId = ((Number) companyIdObj).longValue();
+                else
+                    this.shipmentCompanyId = Long.parseLong(companyIdObj.toString());
+            }
+
+            // carrierUserId
+            Object carrierUserIdObj = data.get("assignedCarrierId");
+            if (carrierUserIdObj == null)
+                carrierUserIdObj = data.get("carrierUserId");
+            if (carrierUserIdObj != null) {
+                if (carrierUserIdObj instanceof Number)
+                    this.assignedCarrierUserId = ((Number) carrierUserIdObj).longValue();
+                else
+                    this.assignedCarrierUserId = Long.parseLong(carrierUserIdObj.toString());
+            }
+
+
+
+            // senderUserId -- eğer eventData'da varsa
+            Object senderUserIdObj = data.get("senderCustomerId");
+            if (senderUserIdObj == null)
+                senderUserIdObj = data.get("senderUserId");
+            if (senderUserIdObj != null) {
+                if (senderUserIdObj instanceof Number)
+                    this.senderUserId = ((Number) senderUserIdObj).longValue();
+                else
+                    this.senderUserId = Long.parseLong(senderUserIdObj.toString());
             }
 
             log.debug("Successfully extracted data from event data for tracking: {}", trackingNumber);

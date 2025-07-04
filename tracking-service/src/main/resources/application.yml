@@ -12,6 +12,11 @@ spring:
         initial-interval: 1000
         max-attempts: 6
         max-interval: 2000
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    deserialization:
+      ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
 
 eureka:
   client:

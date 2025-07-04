@@ -197,6 +197,234 @@ class NotificationService {
             throw error;
         }
     }
+    async getInAppNotifications(userId: number, page = 0, size = 20, unreadOnly = false): Promise<NotificationPageResponse> {
+        try {
+            console.log('📱 Fetching in-app notifications:', { userId, page, size, unreadOnly });
+
+            const url = `${API_BASE_URL}/api/notifications/user/${userId}/in-app?page=${page}&size=${size}&unreadOnly=${unreadOnly}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<NotificationPageResponse>(response);
+            console.log('✅ In-app notifications retrieved:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ Error fetching in-app notifications:', error);
+            throw error;
+        }
+    }
+    /**
+     * Okunmamış bildirim sayısını getirir
+     */
+    async getUnreadCount(userId: number): Promise<{ totalUnread: number; inAppUnread: number }> {
+        try {
+            console.log('📊 Fetching unread count:', { userId });
+
+            const url = `${API_BASE_URL}/api/notifications/user/${userId}/unread-count`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<{ totalUnread: number; inAppUnread: number; userId: number }>(response);
+            console.log('✅ Unread count retrieved:', data);
+            return { totalUnread: data.totalUnread, inAppUnread: data.inAppUnread };
+
+        } catch (error) {
+            console.error('❌ Error fetching unread count:', error);
+            throw error;
+        }
+    }
+    /**
+     * Bildirimi okundu olarak işaretler
+     */
+    async markAsRead(notificationId: string, userId: number): Promise<Notification> {
+        try {
+            console.log('✅ Marking notification as read:', { notificationId, userId });
+
+            const url = `${API_BASE_URL}/api/notifications/${notificationId}/mark-read?userId=${userId}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<Notification>(response);
+            console.log('✅ Notification marked as read:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ Error marking notification as read:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Tüm bildirimleri okundu olarak işaretler
+     */
+    async markAllAsRead(userId: number, inAppOnly = false): Promise<{ updatedCount: number }> {
+        try {
+            console.log('✅ Marking all notifications as read:', { userId, inAppOnly });
+
+            const url = `${API_BASE_URL}/api/notifications/user/${userId}/mark-all-read?inAppOnly=${inAppOnly}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<{ updatedCount: number; userId: number; inAppOnly: boolean }>(response);
+            console.log('✅ All notifications marked as read:', data);
+            return { updatedCount: data.updatedCount };
+
+        } catch (error) {
+            console.error('❌ Error marking all notifications as read:', error);
+            throw error;
+        }
+    }
+    /**
+     * Bildirimi siler
+     */
+    async deleteNotification(notificationId: string, userId: number): Promise<void> {
+        try {
+            console.log('🗑️ Deleting notification:', { notificationId, userId });
+
+            const url = `${API_BASE_URL}/api/notifications/${notificationId}?userId=${userId}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            console.log('✅ Notification deleted successfully');
+
+        } catch (error) {
+            console.error('❌ Error deleting notification:', error);
+            throw error;
+        }
+    }
+    /**
+     * Tüm bildirimleri temizler
+     */
+    async clearAllNotifications(userId: number, readOnly = false): Promise<{ deletedCount: number }> {
+        try {
+            console.log('🗑️ Clearing all notifications:', { userId, readOnly });
+
+            const url = `${API_BASE_URL}/api/notifications/user/${userId}/clear-all?readOnly=${readOnly}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<{ deletedCount: number; userId: number; readOnly: boolean }>(response);
+            console.log('✅ All notifications cleared:', data);
+            return { deletedCount: data.deletedCount };
+
+        } catch (error) {
+            console.error('❌ Error clearing all notifications:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Push bildirim tercihlerini günceller
+     */
+    async updatePushPreference(userId: number, enabled: boolean): Promise<NotificationPreference> {
+        try {
+            console.log('📱 Updating push preference:', { userId, enabled });
+
+            const url = `${API_BASE_URL}/api/notifications/preferences/${userId}/push?enabled=${enabled}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<NotificationPreference>(response);
+            console.log('✅ Push preference updated:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ Error updating push preference:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * SMS tercihlerini günceller
+     */
+    async updateSmsPreference(userId: number, enabled: boolean): Promise<NotificationPreference> {
+        try {
+            console.log('📲 Updating SMS preference:', { userId, enabled });
+
+            const url = `${API_BASE_URL}/api/notifications/preferences/${userId}/sms?enabled=${enabled}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<NotificationPreference>(response);
+            console.log('✅ SMS preference updated:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ Error updating SMS preference:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Bildirim istatistiklerini getirir
+     */
+    async getNotificationStats(userId: number): Promise<any> {
+        try {
+            console.log('📊 Fetching notification stats:', { userId });
+
+            const url = `${API_BASE_URL}/api/notifications/user/${userId}/stats`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<any>(response);
+            console.log('✅ Notification stats retrieved:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ Error fetching notification stats:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Bildirim filtreleri ile getir
+     */
+    async getNotificationsWithFilter(userId: number, page = 0, size = 20, status?: string, channel?: string): Promise<NotificationPageResponse> {
+        try {
+            console.log('🔍 Fetching notifications with filter:', { userId, page, size, status, channel });
+
+            let url = `${API_BASE_URL}/api/notifications/user/${userId}?page=${page}&size=${size}`;
+            if (status) url += `&status=${status}`;
+            if (channel) url += `&channel=${channel}`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getAuthHeaders(),
+            });
+
+            const data = await this.handleResponse<NotificationPageResponse>(response);
+            console.log('✅ Filtered notifications retrieved:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ Error fetching filtered notifications:', error);
+            throw error;
+        }
+    }
+
 
     /**
      * Notification type'ların Türkçe açıklamalarını döndürür
@@ -312,5 +540,7 @@ class NotificationService {
         }
     }
 }
+
+
 
 export const notificationService = new NotificationService();

@@ -1,6 +1,5 @@
 package com.cargotracking.tracking_service.config;
 
-import com.cargotracking.tracking_service.dto.StatusChangedEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;

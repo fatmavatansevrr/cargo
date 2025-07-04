@@ -1,7 +1,6 @@
 package com.cargotracking.tracking_service.controller;
 
 import com.cargotracking.tracking_service.dto.TrackingHistoryResponse;
-import com.cargotracking.tracking_service.dto.StatusChangedEvent;
 import com.cargotracking.tracking_service.model.TrackingState;
 import com.cargotracking.tracking_service.service.TrackingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @RestController

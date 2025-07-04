@@ -46,7 +46,7 @@ public class Notification {
     private String trackingNumber;
     
     @Field("shipment_id")
-    private Long shipmentId;
+    private String shipmentId;
     
     @Field("type")
     @Indexed

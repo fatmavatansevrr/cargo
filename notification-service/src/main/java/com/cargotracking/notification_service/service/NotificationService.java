@@ -4,12 +4,14 @@ import com.cargotracking.notification_service.client.UserServiceClient;
 import com.cargotracking.notification_service.client.ShipmentServiceClient;
 import com.cargotracking.notification_service.event.ShipmentEvent;
 import com.cargotracking.notification_service.event.TrackingEvent;
+import com.cargotracking.notification_service.factory.NotificationFactory;
 import com.cargotracking.notification_service.model.Notification;
 import com.cargotracking.notification_service.model.NotificationPreference;
 import com.cargotracking.notification_service.repository.NotificationPreferenceRepository;
 import com.cargotracking.notification_service.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +28,8 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationService {
-
+    @Autowired
+    private NotificationFactory notificationFactory;
     private final NotificationRepository notificationRepository;
     private final NotificationPreferenceRepository preferenceRepository;
     private final EmailService emailService;
@@ -44,7 +47,115 @@ public class NotificationService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     // ✅ SHIPMENT EVENT PROCESSING - Ana metod
+
+
+// ... diğer bağımlılıklar
+
     public void processShipmentEvent(ShipmentEvent event) {
+        log.info("📦 Shipment event işleniyor: {} - {}", event.getEventType(), event.getTrackingNumber());
+
+        try {
+            // 1. Event data extraction
+            if (event.getEventData() != null) {
+                event.extractDataFromEventData();
+                log.debug("📋 Event data extracted for: {}", event.getTrackingNumber());
+            }
+
+            // 2. Gerekli parametreler
+            String shipmentId = event.getTrackingNumber();
+            String trackingNumber = event.getTrackingNumber();
+            Long companyId = event.getShipmentCompanyId();          // eventData’dan dolduruyorsan kontrol et
+            Long senderUserId = event.getSenderUserId();    // eventData’dan dolduruyorsan kontrol et
+            Long carrierUserId = event.getAssignedCarrierUserId();  // eventData’dan dolduruyorsan kontrol et
+            String status = event.getStatus();
+
+            String recipientEmail = extractRecipientEmail(event);
+
+            // 3. Event tipine göre işleme
+            switch (event.getEventType().toLowerCase()) {
+                case "shipment.created":
+                    // Şirket için
+                    if (companyId != null)
+                        notificationRepository.save(
+                                notificationFactory.createShipmentCreatedCompanyNotification(
+                                        companyId, shipmentId, trackingNumber
+                                )
+                        );
+                    // Gönderici için
+                    if (senderUserId != null)
+                        notificationRepository.save(
+                                notificationFactory.createShipmentCreatedSenderNotification(
+                                        senderUserId, shipmentId, trackingNumber
+                                )
+                        );
+
+                    if (carrierUserId != null)
+                        notificationRepository.save(
+                                notificationFactory.createShipmentAssignedCarrierNotification(
+                                        carrierUserId, shipmentId, trackingNumber
+                                )
+                        );
+                    // Email gönder
+                    if (recipientEmail != null && !recipientEmail.isEmpty()) {
+                        sendShipmentCreatedEmail(event, recipientEmail);
+                    }
+                    break;
+
+                case "shipment.updated":
+                    if (companyId != null)
+                        notificationRepository.save(
+                                notificationFactory.createShipmentStatusChangedCompanyNotification(
+                                        companyId, shipmentId, trackingNumber, status
+                                )
+                        );
+                    if (recipientEmail != null && !recipientEmail.isEmpty()) {
+                        sendShipmentUpdatedEmail(event, recipientEmail);
+                    }
+                    break;
+
+                case "shipment.cancelled":
+                case "shipment.canceled":
+                    // Gönderici için
+                    if (senderUserId != null)
+                        notificationRepository.save(
+                                notificationFactory.createShipmentCancelledSenderNotification(
+                                        senderUserId, shipmentId, trackingNumber
+                                )
+                        );
+
+                    if (recipientEmail != null && !recipientEmail.isEmpty()) {
+                        sendShipmentCancelledEmail(event, recipientEmail);
+                    }
+                    break;
+
+                case "shipment.finished":
+                    // Gönderici için teslimat bildirimi
+                    if (senderUserId != null)
+                        notificationRepository.save(
+                                notificationFactory.createDeliveryCompletedNotification(
+                                        senderUserId, shipmentId, trackingNumber
+                                )
+                        );
+                    if (recipientEmail != null && !recipientEmail.isEmpty()) {
+                        sendShipmentFinishedEmail(event, recipientEmail);
+                    }
+                    break;
+
+
+
+                default:
+                    log.warn("⚠️ Bilinmeyen shipment event tipi: {}", event.getEventType());
+            }
+
+            log.info("✅ Shipment notification işlemleri tamamlandı: {} -> {}", event.getTrackingNumber(), recipientEmail);
+
+        } catch (Exception e) {
+            log.error("❌ Shipment event işlenirken hata: {} - {}", event.getTrackingNumber(), e.getMessage(), e);
+        }
+    }
+
+
+    /*public void processShipmentEvent(ShipmentEvent event) {
         log.info("📦 Shipment event işleniyor: {} - {}", event.getEventType(), event.getTrackingNumber());
 
         try {
@@ -85,7 +196,7 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("❌ Shipment event işlenirken hata: {} - {}", event.getTrackingNumber(), e.getMessage(), e);
         }
-    }
+    }*/
 
 
     // ✅ EMAIL SENDING METHODS
@@ -116,7 +227,7 @@ public class NotificationService {
 
     private void sendTrackingStatusEmail(TrackingEvent event, String recipientEmail) {
         String subject = "Gönderinizin Durumu Güncellendi: "
-                + getStatusDisplayName(event.getCurrentStatus())
+                + getStatusDisplayName(event.getNewStatus())
                 + " - " + event.getTrackingNumber();
         String content = createTrackingStatusEmailContent(event);
 
@@ -215,7 +326,7 @@ public class NotificationService {
         content.append("Gönderinizin durumu güncellenmiştir.\n\n");
         content.append("📦 DURUM BİLGİSİ:\n");
         content.append("Takip Numarası: ").append(event.getTrackingNumber()).append("\n");
-        content.append("Güncel Durum: ").append(getStatusDisplayName(event.getCurrentStatus())).append("\n");
+        content.append("Güncel Durum: ").append(getStatusDisplayName(event.getNewStatus())).append("\n");
 
         if (event.getLocation() != null && !event.getLocation().trim().isEmpty()) {
             content.append("Konum: ").append(event.getLocation()).append("\n");
@@ -229,7 +340,7 @@ public class NotificationService {
         }
 
         content.append("\n📋 DURUM AÇIKLAMASI:\n");
-        content.append(getStatusDescription(event.getCurrentStatus())).append("\n");
+        content.append(getStatusDescription(event.getNewStatus())).append("\n");
 
         content.append("\n🔍 Gönderinizi takip etmek için takip numaranızı kullanabilirsiniz.\n");
         content.append("Bu bir otomatik mesajdır, lütfen yanıtlamayınız.\n\n");
@@ -438,14 +549,178 @@ public class NotificationService {
     }
 
     // Status changed event işleme
-    public void processStatusChangedEvent(TrackingEvent event) {
+    /*public void processStatusChangedEvent(TrackingEvent event) {
+        // Kime bildirim gidecek? Genelde gönderici ve şirket
+        Long senderUserId = event.getSenderUserId();  // event'e göre doldurmalısın
+        Long companyId = event.getCompanyId();        // event'e göre doldurmalısın
+        Long carrierUserId = event.getCarrierUserId(); // event'e göre doldurmalısın
+
+        String trackingNumber = event.getTrackingNumber();
+        String oldStatus = event.getPreviousStatus();
+        String newStatus = event.getCurrentStatus();
+
+        // Sistem notification: Gönderici
+        if (senderUserId != null) {
+            notificationRepository.save(
+                    notificationFactory.createShipmentStatusChangedSenderNotification(
+                            senderUserId, event.getShipmentId(), trackingNumber, oldStatus, newStatus
+                    )
+            );
+        }
+
+        // Sistem notification: Şirket
+        if (companyId != null) {
+            notificationRepository.save(
+                    notificationFactory.createShipmentStatusChangedCompanyNotification(
+                            companyId, event.getShipmentId(), trackingNumber, oldStatus, newStatus
+                    )
+            );
+        }
+
+        // (Opsiyonel) Sistem notification: Carrier
+        if (carrierUserId != null) {
+            notificationRepository.save(
+                    notificationFactory.createShipmentStatusChangedCarrierNotification(
+                            carrierUserId, event.getShipmentId(), trackingNumber, oldStatus, newStatus
+                    )
+            );
+        }
+
+
+
+
         String recipientEmail = event.getReceiverEmail();
         if (recipientEmail == null || recipientEmail.trim().isEmpty()) {
             log.warn("⚠️ Tracking için recipient email bulunamadı: {}", event.getTrackingNumber());
             return;
         }
         sendTrackingStatusEmail(event, recipientEmail);
+    }*/
+
+    public void processStatusChangedEvent(TrackingEvent event) {
+        try {
+            log.info("📊 Processing status changed event: trackingNumber={}, status={}",
+                    event.getTrackingNumber(), event.getNewStatus());
+
+            // 1. EVENT VALIDATION
+            if (event.getTrackingNumber() == null || event.getTrackingNumber().trim().isEmpty()) {
+                log.warn("⚠️ TrackingNumber boş - event skip ediliyor: {}", event);
+                return;
+            }
+
+            if (event.getNewStatus() == null || event.getNewStatus().trim().isEmpty()) {
+                log.warn("⚠️ CurrentStatus boş - event skip ediliyor: {}", event.getTrackingNumber());
+                return;
+            }
+
+            // 2. EVENT DATA EXTRACTION
+            String trackingNumber = event.getTrackingNumber().trim();
+            String newStatus = event.getNewStatus().trim();
+            String location = event.getLocation();
+
+            // 3. USER ID'LERİ GÜVENLİ ŞEKİLDE AL
+            Long senderUserId = extractUserId(event.getSenderUserId(), "sender");
+            Long companyId = extractUserId(event.getCompanyId(), "company");
+            Long carrierUserId = extractUserId(event.getCarrierUserId(), "carrier");
+            String shipmentId = event.getTrackingNumber().trim();
+
+            // 4. IN-APP NOTIFICATION'LARI OLUŞTUR
+            createInAppNotifications(shipmentId, trackingNumber, newStatus,
+                    senderUserId, companyId, carrierUserId, location);
+
+            // 5. EMAIL NOTIFICATION
+            String recipientEmail = extractRecipientEmail(event);
+            if (recipientEmail != null && !recipientEmail.trim().isEmpty()) {
+                sendTrackingStatusEmail(event, recipientEmail.trim());
+                log.info("✅ Email notification sent: {} -> {}", trackingNumber, recipientEmail);
+            } else {
+                log.warn("⚠️ Recipient email bulunamadı, sadece in-app notification gönderildi: {}", trackingNumber);
+            }
+
+            log.info("✅ Status changed event processed successfully: {} -> {}", trackingNumber, newStatus);
+
+        } catch (Exception e) {
+            log.error("❌ Error processing status changed event: trackingNumber={}, error={}",
+                    event.getTrackingNumber(), e.getMessage(), e);
+            // Exception'ı yeniden throw etme - listener'da handle edilsin
+        }
     }
+
+    /**
+     * IN-APP NOTIFICATION'LARI GÜVENLİ ŞEKİLDE OLUŞTUR
+     */
+    private void createInAppNotifications(String shipmentId, String trackingNumber,
+                                          String newStatus, Long senderUserId, Long companyId,
+                                          Long carrierUserId, String location) {
+        try {
+            // SENDER NOTIFICATION
+            if (senderUserId != null && senderUserId > 0) {
+                try {
+                    Notification senderNotification = notificationFactory.createShipmentStatusChangedSenderNotification(
+                            senderUserId, shipmentId, trackingNumber, newStatus
+                    );
+
+                    // Location bilgisini ekle
+                    if (location != null && !location.trim().isEmpty()) {
+                        senderNotification.setMessage(senderNotification.getMessage() + " Konum: " + location);
+                    }
+
+                    notificationRepository.save(senderNotification);
+                    log.debug("📱 Sender notification created: userId={}, trackingNumber={}", senderUserId, trackingNumber);
+
+                } catch (Exception e) {
+                    log.error("❌ Failed to create sender notification: userId={}, trackingNumber={}, error={}",
+                            senderUserId, trackingNumber, e.getMessage());
+                }
+            }
+
+            // COMPANY NOTIFICATION
+            if (companyId != null && companyId > 0) {
+                try {
+                    Notification companyNotification = notificationFactory.createShipmentStatusChangedCompanyNotification(
+                            companyId, shipmentId, trackingNumber, newStatus
+                    );
+
+                    // Location bilgisini ekle
+                    if (location != null && !location.trim().isEmpty()) {
+                        companyNotification.setMessage(companyNotification.getMessage() + " Konum: " + location);
+                    }
+
+                    notificationRepository.save(companyNotification);
+                    log.debug("📱 Company notification created: companyId={}, trackingNumber={}", companyId, trackingNumber);
+
+                } catch (Exception e) {
+                    log.error("❌ Failed to create company notification: companyId={}, trackingNumber={}, error={}",
+                            companyId, trackingNumber, e.getMessage());
+                }
+            }
+
+            // CARRIER NOTIFICATION (sadece belirli statuslar için)
+            if (carrierUserId != null && carrierUserId > 0 && shouldNotifyCarrier(newStatus)) {
+                try {
+                    Notification carrierNotification = notificationFactory.createShipmentStatusChangedCarrierNotification(
+                            carrierUserId, shipmentId, trackingNumber, newStatus
+                    );
+
+                    // Location bilgisini ekle
+                    if (location != null && !location.trim().isEmpty()) {
+                        carrierNotification.setMessage(carrierNotification.getMessage() + " Konum: " + location);
+                    }
+
+                    notificationRepository.save(carrierNotification);
+                    log.debug("📱 Carrier notification created: carrierId={}, trackingNumber={}", carrierUserId, trackingNumber);
+
+                } catch (Exception e) {
+                    log.error("❌ Failed to create carrier notification: carrierId={}, trackingNumber={}, error={}",
+                            carrierUserId, trackingNumber, e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Error creating in-app notifications: trackingNumber={}, error={}", trackingNumber, e.getMessage());
+        }
+    }
+
 
     // Delivery completed event işleme
     public void processDeliveryCompletedEvent(TrackingEvent event) {
@@ -501,6 +776,69 @@ public class NotificationService {
                 event.getLocation() != null ? event.getLocation() : "Bilinmiyor");
 
         sendEmailNotification(recipientEmail, subject, message);
+    }
+
+
+    private Long extractUserId(Long userId, String userType) {
+        if (userId == null || userId <= 0) {
+            log.debug("⚠️ {} userId null veya geçersiz: {}", userType, userId);
+            return null;
+        }
+        return userId;
+    }
+
+    /**
+     * RECIPIENT EMAIL'İ GÜVENLİ ŞEKİLDE ÇIKAR
+     */
+    private String extractRecipientEmail(TrackingEvent event) {
+        // 1. Event'den direkt email
+        if (event.getReceiverEmail() != null && !event.getReceiverEmail().trim().isEmpty()) {
+            String email = event.getReceiverEmail().trim();
+            if (isValidEmail(email)) {
+                return email;
+            }
+        }
+
+        // 3. Shipment service'den email al (fallback)
+        try {
+            String email = getRecipientEmailFromTracking(event.getTrackingNumber());
+            if (email != null && !email.trim().isEmpty() && isValidEmail(email.trim())) {
+                return email.trim();
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ Shipment service'den email alınamadı: trackingNumber={}, error={}",
+                    event.getTrackingNumber(), e.getMessage());
+        }
+
+        log.warn("⚠️ Hiçbir kaynaktan geçerli email bulunamadı: trackingNumber={}", event.getTrackingNumber());
+        return null;
+    }
+
+    /**
+     * EMAIL VALİDASYONU
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+
+        // Basit email regex - production'da daha detaylı kullanılabilir
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        return email.matches(emailRegex);
+    }
+
+    /**
+     * CARRIER'IN BİLDİRİM ALMASI GEREKİP GEREKMEDİĞİNİ KONTROL ET
+     */
+    private boolean shouldNotifyCarrier(String status) {
+        if (status == null) return false;
+
+        return switch (status.toUpperCase()) {
+            case "PICKED_UP", "IN_TRANSIT", "OUT_FOR_DELIVERY" -> true; // Aktif işlemler
+            case "DELIVERED", "FAILED" -> true; // Tamamlama bildirimleri
+            case "CANCELLED", "CANCELED" -> true; // İptal bildirimi
+            default -> false;
+        };
     }
 
 

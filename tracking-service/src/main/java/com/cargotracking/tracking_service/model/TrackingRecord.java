@@ -28,4 +28,15 @@ public class TrackingRecord {
     private LocalDateTime updatedAt;
 
     private String receiverEmail;
+    // EKLENEN ALANLAR
+    private Long receiverUserId;
+    private String receiverFullName;
+
+    private Long senderUserId;
+    private String senderFullName;
+
+    private Long companyId;
+
+    private Long carrierUserId;
+    private String carrierFullName;
 }
